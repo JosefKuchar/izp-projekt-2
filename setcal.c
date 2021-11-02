@@ -13,7 +13,9 @@
 #define MAX_STRING_LENGTH 30
 #define STRING_BUFFER_SIZE MAX_STRING_LENGTH + 1  // +1 is for \0
 
-enum store_node_type { UNIVERZUM, SET, RELATION };
+enum store_node_type { UNIVERZUM,
+                       SET,
+                       RELATION };
 
 // Struct to keep track of univerzum
 struct univerzum {
@@ -310,6 +312,53 @@ void parse_univerzum(FILE* fp) {
 }
 
 /**
+ * Parse set from file stream
+ * @param fp File pointer
+ * @param u Univerzum
+ * */
+void parse_set(FILE* fp, struct univerzum* u) {
+    struct set s;
+
+    //Allocate memory for one node
+    s.nodes = malloc(sizeof(int));
+    s.size = 0;
+
+    char node[MAX_STRING_LENGTH];
+    int index = 0;
+
+    while (true) {
+        int c = getc(fp);
+
+        if (c == ' ' || c == EOF || c == '\n') {
+            s.size++;
+            index = 0;
+            // Allocate memory for next node
+            s.nodes = realloc(s.nodes, sizeof(int) * s.size + 1);
+
+            // Compares set node to univerzum node
+            int max = u->size;
+            for (int i = 0; i < max; i++) {
+                if (!(strcmp(node, u->nodes[i]))) {
+                    s.nodes[s.size - 1] = i;
+                    break;
+                }
+            }
+            // If character is EOF or newline we can end parsing
+            if (c == EOF || c == '\n') {
+                break;
+            } else {
+                continue;
+            }
+        }
+
+        node[index] = c;
+        index++;
+    }
+    print_set(&s, u);
+    free_set(&s);
+}
+
+/**
  * Process all lines in file
  * @param fp File pointer
  * @return True if everything went well
@@ -322,6 +371,17 @@ bool process_file(FILE* fp) {
         fprintf(stderr, "Malloc error!\n");
         return false;
     }
+
+    //Test univerzum struct
+    struct univerzum u = {0};
+    u.size = 6;
+    u.nodes = calloc(sizeof(*u.nodes), 6);
+    strcpy(u.nodes[0], "a");
+    strcpy(u.nodes[1], "b");
+    strcpy(u.nodes[2], "c");
+    strcpy(u.nodes[3], "x");
+    strcpy(u.nodes[4], "y");
+    strcpy(u.nodes[5], "z");
 
     int c = 0;
     // Loop around all chars
@@ -336,6 +396,7 @@ bool process_file(FILE* fp) {
                 break;
             case 'S':
                 // TODO parse set
+                parse_set(fp, &u);
                 break;
             case 'R':
                 // TODO parse relation
@@ -351,6 +412,8 @@ bool process_file(FILE* fp) {
 
     // Free store from memory
     free_store(store, store_size);
+
+    free_univerzum(&u);
 
     return true;
 }
