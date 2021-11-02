@@ -18,7 +18,7 @@ enum store_node_type { UNIVERZUM, SET, RELATION };
 // Struct to keep track of univerzum
 struct univerzum {
     int size;
-    char* nodes[30];
+    char* nodes[STRING_BUFFER_SIZE];
 };
 
 // Struct to keep track of one set
@@ -40,7 +40,7 @@ struct relation {
 };
 
 struct store_node {
-    int type;
+    enum store_node_type type;
     void* obj;
 };
 
@@ -224,6 +224,17 @@ void relation_bijective(struct relation* r) {
 */
 
 /**
+ * Free store from memory including all children
+ * @param store Pointer to store
+ * @param size Size of store
+ */
+void free_store(struct store_node* store, int size) {
+    for (int i = 0; i < size; i++) {
+        free(store[i].obj);
+    }
+}
+
+/**
  * Process all lines in file
  * @param fp File pointer
  * @return True if everything went well
@@ -231,6 +242,7 @@ void relation_bijective(struct relation* r) {
 bool process_file(FILE* fp) {
     // Allocate enough memory for store
     struct store_node* store = malloc(sizeof(struct store_node) * 1000);
+    int store_size = 0;
     if (store == NULL) {
         fprintf(stderr, "Malloc error!\n");
         return false;
@@ -246,7 +258,7 @@ bool process_file(FILE* fp) {
     printf("%d", i);
 
     // Free store from memory
-    free(store);
+    free_store(store, store_size);
 
     return true;
 }
