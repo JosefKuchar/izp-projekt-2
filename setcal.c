@@ -232,6 +232,8 @@ void free_store(struct store_node* store, int size) {
     for (int i = 0; i < size; i++) {
         free(store[i].obj);
     }
+
+    free(store);
 }
 
 /**
