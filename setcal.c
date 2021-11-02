@@ -18,7 +18,7 @@ enum store_node_type { UNIVERZUM, SET, RELATION };
 // Struct to keep track of univerzum
 struct univerzum {
     int size;
-    char* nodes[STRING_BUFFER_SIZE];
+    char (*nodes)[STRING_BUFFER_SIZE];
 };
 
 // Struct to keep track of one set
@@ -276,6 +276,40 @@ void free_store(struct store_node* store, int size) {
 }
 
 /**
+ * Parse univerzum from file stream
+ * @param fp File pointer
+ */
+void parse_univerzum(FILE* fp) {
+    struct univerzum u;
+    // Allocate memory for 10 strings for now
+    u.nodes = calloc(sizeof(*u.nodes), 10);
+    u.size = 1;
+
+    int index = 0;
+
+    while (true) {
+        int c = getc(fp);
+        // If character is EOF or newline we can end parsing
+        if (c == EOF || c == '\n') {
+            // TODO: Return the actual univerzum
+            break;
+        }
+
+        if (c == ' ') {
+            u.size++;
+            index = 0;
+            continue;
+        }
+
+        u.nodes[u.size - 1][index] = c;
+        index++;
+    }
+
+    print_univerzum(&u);
+    free_univerzum(&u);
+}
+
+/**
  * Process all lines in file
  * @param fp File pointer
  * @return True if everything went well
@@ -290,13 +324,30 @@ bool process_file(FILE* fp) {
     }
 
     int c = 0;
-    int i = 0;
     // Loop around all chars
     while ((c = getc(fp)) != EOF) {
-        if (c == '\n') {
+        // FIXME for blank things (univerzum for example)
+        getc(fp);
+
+        switch (c) {
+            case 'U':
+                // TODO parse univerzum better
+                parse_univerzum(fp);
+                break;
+            case 'S':
+                // TODO parse set
+                break;
+            case 'R':
+                // TODO parse relation
+                break;
+            case 'C':
+                // TODO parse command
+                break;
+            default:
+                // TODO handle other characters
+                break;
         }
     }
-    printf("%d", i);
 
     // Free store from memory
     free_store(store, store_size);
@@ -360,38 +411,6 @@ int main(int argc, char* argv[]) {
     if (fp == NULL) {
         return EXIT_FAILURE;
     }
-
-    struct univerzum u = {.size = 5, .nodes = {"a", "b", "c", "d", "e"}};
-
-    struct set set = {0};
-    set.size = 5;
-    set.nodes = malloc(sizeof(int) * 5);
-    set.nodes[0] = 4;
-    set.nodes[1] = 1;
-    set.nodes[2] = 0;
-    set.nodes[3] = 3;
-    set.nodes[4] = 2;
-    set_empty(&set);
-
-    printf("%d\n", set.nodes[0]);
-
-    print_set(&set, &u);
-    set_sort(&set);
-    print_set(&set, &u);
-
-    printf("%d\n", set.nodes[0]);
-
-    struct store_node store_node;
-    store_node.type = SET;
-    store_node.obj = &set;
-
-    printf("%d", ((struct set*)store_node.obj)->size);
-    printf("yes");
-    printf("%p\n", store_node.obj);
-
-    print_set(store_node.obj, &u);
-
-    free(set.nodes);
 
     // Process file
     if (!process_file(fp)) {
