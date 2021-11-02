@@ -224,15 +224,54 @@ void relation_bijective(struct relation* r) {
 */
 
 /**
+ * Free univerzum struct
+ * @param u Univerzum
+ */
+void free_univerzum(struct univerzum* u) {
+    free(u->nodes);
+}
+
+/**
+ * Free set struct
+ * @param s Set
+ */
+void free_set(struct set* s) {
+    free(s->nodes);
+}
+
+/**
+ * Free relatino struct
+ * @param r Relation
+ */
+void free_relation(struct relation* r) {
+    free(r->nodes);
+}
+
+/**
  * Free store from memory including all children
  * @param store Pointer to store
  * @param size Size of store
  */
 void free_store(struct store_node* store, int size) {
+    // Free all store nodes based on their type
     for (int i = 0; i < size; i++) {
-        free(store[i].obj);
+        switch (store[i].type) {
+            case UNIVERZUM:
+                free_univerzum(store[i].obj);
+                break;
+            case SET:
+                free_set(store[i].obj);
+                break;
+            case RELATION:
+                free_relation(store[i].obj);
+                break;
+            default:
+                // TODO: Handle this, it shouldn't happen tho
+                break;
+        }
     }
 
+    // Free store itself
     free(store);
 }
 
