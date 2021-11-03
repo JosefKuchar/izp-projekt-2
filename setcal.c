@@ -255,10 +255,29 @@ void set_card(struct set* a) {
     printf("%d\n", a->size);
 }
 
-/*
-void set_complement(struct set* a, struct univerzum* u) {
-    // TODO
+struct set* set_complement(struct set* a, struct univerzum* u) {
+    // Allocate memory for one node
+    struct set* com = malloc(sizeof(struct univerzum));
+    com->nodes = malloc(sizeof(int));
+    com->size = 0;
+    //Iterates through univerzum
+    for (int i = 0; i < u->size; i++) {
+        //Iterates through set
+        for (int k = 0; k < a->size; k++) {
+            if (a->nodes[k] == i) {
+                break;
+            }
+            // If the iteration is the last one => node wasn't found in univerzum
+            if (k == a->size - 1) {
+                com->nodes[com->size++] = i;
+                // Allocate memory for next node
+                com->nodes = realloc(com->nodes, sizeof(int) * (com->size + 1));
+            }
+        }
+    }
+    return com;
 }
+/*
 
 void set_union(struct set* a, struct set* b) {
     // TODO
