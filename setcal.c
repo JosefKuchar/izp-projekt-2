@@ -340,6 +340,7 @@ void relation_bijective(struct relation* r) {
  */
 void free_univerzum(struct univerzum* u) {
     free(u->nodes);
+    free(u);
 }
 
 /**
@@ -348,6 +349,7 @@ void free_univerzum(struct univerzum* u) {
  */
 void free_set(struct set* s) {
     free(s->nodes);
+    free(s);
 }
 
 /**
@@ -356,6 +358,7 @@ void free_set(struct set* s) {
  */
 void free_relation(struct relation* r) {
     free(r->nodes);
+    free(r);
 }
 
 /**
@@ -380,8 +383,6 @@ void free_store(struct store_node* store, int size) {
                 // TODO: Handle this, it shouldn't happen tho
                 break;
         }
-
-        free(store[i].obj);
     }
 
     // Free store itself
@@ -601,7 +602,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Close file
-    if (!fclose(fp)) {
+    if (!close_file(fp)) {
         return EXIT_FAILURE;
     }
 
