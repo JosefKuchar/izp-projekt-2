@@ -256,27 +256,23 @@ void set_card(struct set* a) {
 }
 
 struct set* set_complement(struct set* a, struct univerzum* u) {
-    // Allocate memory for one node
-    struct set* com = malloc(sizeof(struct univerzum));
-    com->nodes = malloc(sizeof(int));
-    com->size = 0;
-    // Iterates through univerzum
-    for (int i = 0; i < u->size; i++) {
-        // Iterates through set
-        for (int k = 0; k < a->size; k++) {
-            if (a->nodes[k] == i) {
+    // Allocate memory complement set
+    struct set* complement = malloc(sizeof(u) - sizeof(a));
+    complement->nodes = malloc(sizeof(int));
+    complement->size = 0;
+
+    int k = 0;
+    for (int i = 0; i <= a->size; i++) {
+        while (k < u->size) {
+            if (a->nodes[i] == k) {
+                k = a->nodes[i] + 1;
                 break;
             }
-            // If the iteration is the last one => node wasn't found in
-            // univerzum
-            if (k == a->size - 1) {
-                com->nodes[com->size++] = i;
-                // Allocate memory for next node
-                com->nodes = realloc(com->nodes, sizeof(int) * (com->size + 1));
-            }
+            complement->nodes[complement->size++] = k;
+            k++;
         }
     }
-    return com;
+    return complement;
 }
 /*
 
