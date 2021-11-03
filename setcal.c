@@ -391,8 +391,10 @@ void free_store(struct store_node* store, int size) {
 /**
  * Parse univerzum from file stream
  * @param fp File pointer
+ * @param u Univerzum
+ * @return True if everything went well
  */
-void parse_univerzum(FILE* fp, struct univerzum* u) {
+bool parse_univerzum(FILE* fp, struct univerzum* u) {
     // Allocate memory for 1 node
     u->nodes = calloc(sizeof(u->nodes), 1);
     u->size = 1;
@@ -420,14 +422,16 @@ void parse_univerzum(FILE* fp, struct univerzum* u) {
     }
 
     print_univerzum(u);
+    return true;
 }
 
 /**
  * Parse set from file stream
  * @param fp File pointer
  * @param u Univerzum
+ * @return True if everything went well
  * */
-void parse_set(FILE* fp, struct set* s, struct univerzum* u) {
+bool parse_set(FILE* fp, struct set* s, struct univerzum* u) {
     // Allocate memory for one node
     s->nodes = malloc(sizeof(int));
     s->size = 0;
@@ -456,7 +460,7 @@ void parse_set(FILE* fp, struct set* s, struct univerzum* u) {
                 // univerzum
                 if (i == max - 1) {
                     fprintf(stderr, "S Set node is not in univerzum.\n");
-                    return;
+                    return false;
                 }
             }
             // If character is EOF or newline we can end parsing
@@ -471,6 +475,7 @@ void parse_set(FILE* fp, struct set* s, struct univerzum* u) {
         index++;
     }
     print_set(s, u);
+    return true;
 }
 
 /**
@@ -479,6 +484,8 @@ void parse_set(FILE* fp, struct set* s, struct univerzum* u) {
  * @return True if everything went well
  */
 bool process_file(FILE* fp) {
+    bool ok = false;
+
     // Allocate enough memory for store
     struct store_node* store = malloc(sizeof(struct store_node) * 1000);
     int store_size = 0;
@@ -498,14 +505,14 @@ bool process_file(FILE* fp) {
                 // TODO parse univerzum better
                 store[store_size].type = UNIVERZUM;
                 store[store_size].obj = malloc(sizeof(struct univerzum));
-                parse_univerzum(fp, store[store_size].obj);
+                ok = parse_univerzum(fp, store[store_size].obj);
                 store_size++;
                 break;
             case 'S':
                 // TODO parse set
                 store[store_size].type = SET;
                 store[store_size].obj = malloc(sizeof(struct set));
-                parse_set(fp, store[store_size].obj, store[0].obj);
+                ok = parse_set(fp, store[store_size].obj, store[0].obj);
                 store_size++;
                 break;
             case 'R':
@@ -518,12 +525,16 @@ bool process_file(FILE* fp) {
                 // TODO handle other characters
                 break;
         }
+
+        if (!ok) {
+            break;
+        }
     }
 
     // Free store from memory
     free_store(store, store_size);
 
-    return true;
+    return ok;
 }
 
 /**
@@ -585,6 +596,7 @@ int main(int argc, char* argv[]) {
 
     // Process file
     if (!process_file(fp)) {
+        fprintf(stderr, "Error parsing file!\n");
         return EXIT_FAILURE;
     }
 
