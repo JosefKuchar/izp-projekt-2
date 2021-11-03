@@ -420,7 +420,6 @@ void parse_univerzum(FILE* fp, struct univerzum* u) {
     }
 
     print_univerzum(u);
-    // free_univerzum(&u);
 }
 
 /**
@@ -428,12 +427,10 @@ void parse_univerzum(FILE* fp, struct univerzum* u) {
  * @param fp File pointer
  * @param u Univerzum
  * */
-void parse_set(FILE* fp, struct univerzum* u) {
-    struct set s;
-
+void parse_set(FILE* fp, struct set* s, struct univerzum* u) {
     // Allocate memory for one node
-    s.nodes = malloc(sizeof(int));
-    s.size = 0;
+    s->nodes = malloc(sizeof(int));
+    s->size = 0;
 
     char node[STRING_BUFFER_SIZE] = {0};
     int index = 0;
@@ -442,17 +439,17 @@ void parse_set(FILE* fp, struct univerzum* u) {
         int c = getc(fp);
 
         if (c == ' ' || c == EOF || c == '\n') {
-            s.size++;
+            s->size++;
             node[index] = '\0';
             index = 0;
             // Allocate memory for next node
-            s.nodes = realloc(s.nodes, sizeof(int) * s.size + 1);
+            s->nodes = realloc(s->nodes, sizeof(int) * s->size + 1);
 
             // Compares set node to univerzum node
             int max = u->size;
             for (int i = 0; i < max; i++) {
                 if (!(strcmp(node, u->nodes[i]))) {
-                    s.nodes[s.size - 1] = i;
+                    s->nodes[s->size - 1] = i;
                     break;
                 }
                 // If the iteration is the last one => set node wasn't found in
@@ -473,8 +470,7 @@ void parse_set(FILE* fp, struct univerzum* u) {
         node[index] = c;
         index++;
     }
-    print_set(&s, u);
-    free_set(&s);
+    print_set(s, u);
 }
 
 /**
@@ -507,7 +503,10 @@ bool process_file(FILE* fp) {
                 break;
             case 'S':
                 // TODO parse set
-                parse_set(fp, store[0].obj);
+                store[store_size].type = SET;
+                store[store_size].obj = malloc(sizeof(struct set));
+                parse_set(fp, store[store_size].obj, store[0].obj);
+                store_size++;
                 break;
             case 'R':
                 // TODO parse relation
