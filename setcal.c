@@ -14,9 +14,7 @@
 #define MAX_STRING_LENGTH 30
 #define STRING_BUFFER_SIZE MAX_STRING_LENGTH + 1  // +1 is for \0
 
-enum store_node_type { UNIVERZUM,
-                       SET,
-                       RELATION };
+enum store_node_type { UNIVERZUM, SET, RELATION };
 
 // Struct to keep track of univerzum
 struct univerzum {
@@ -114,12 +112,12 @@ void relation_sort(struct relation* r) {
 bool univerzum_valid(struct univerzum* u) {
     // Define all illegal words inside univerzum
     const char* illegal[] = {
-        "empty", "card", "complement", "union",
-        "intersect", "minus", "subseteq", "subset",
-        "equals", "reflexive", "symmetric", "antisymmetric",
-        "transitive", "function", "domain", "codomain",
-        "injective", "surjective", "bijective", "closure_ref",
-        "closure_sym", "closure_trans", "select", "true",
+        "empty",       "card",          "complement", "union",
+        "intersect",   "minus",         "subseteq",   "subset",
+        "equals",      "reflexive",     "symmetric",  "antisymmetric",
+        "transitive",  "function",      "domain",     "codomain",
+        "injective",   "surjective",    "bijective",  "closure_ref",
+        "closure_sym", "closure_trans", "select",     "true",
         "false"};
 
     // Loop around all elements inside univerzum
@@ -382,6 +380,8 @@ void free_store(struct store_node* store, int size) {
                 // TODO: Handle this, it shouldn't happen tho
                 break;
         }
+
+        free(store[i].obj);
     }
 
     // Free store itself
@@ -435,7 +435,7 @@ void parse_set(FILE* fp, struct univerzum* u) {
     s.nodes = malloc(sizeof(int));
     s.size = 0;
 
-    char node[MAX_STRING_LENGTH];
+    char node[STRING_BUFFER_SIZE] = {0};
     int index = 0;
 
     while (true) {
@@ -455,7 +455,8 @@ void parse_set(FILE* fp, struct univerzum* u) {
                     s.nodes[s.size - 1] = i;
                     break;
                 }
-                // If the iteration is the last one => set node wasn't found in univerzum
+                // If the iteration is the last one => set node wasn't found in
+                // univerzum
                 if (i == max - 1) {
                     fprintf(stderr, "S Set node is not in univerzum.\n");
                     return;
@@ -501,7 +502,7 @@ bool process_file(FILE* fp) {
                 // TODO parse univerzum better
                 store[store_size].type = UNIVERZUM;
                 store[store_size].obj = malloc(sizeof(struct univerzum));
-                parse_univerzum(fp, (struct univerzum*)store[store_size].obj);
+                parse_univerzum(fp, store[store_size].obj);
                 store_size++;
                 break;
             case 'S':
