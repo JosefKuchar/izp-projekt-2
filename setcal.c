@@ -13,9 +13,7 @@
 #define MAX_STRING_LENGTH 30
 #define STRING_BUFFER_SIZE MAX_STRING_LENGTH + 1  // +1 is for \0
 
-enum store_node_type { UNIVERZUM,
-                       SET,
-                       RELATION };
+enum store_node_type { UNIVERZUM, SET, RELATION };
 
 // Struct to keep track of univerzum
 struct univerzum {
@@ -69,11 +67,40 @@ int compare_num_nodes(const void* a, const void* b) {
 }
 
 /**
+ * Function to compare two relation nodes
+ * @param a Pointer to first relation node
+ * @param b Pointer to second relation node
+ * @return Difference between two relation nodes
+ */
+int compare_relation_nodes(const void* a, const void* b) {
+    // Cast void pointers to struct pointers
+    const struct relation_node* x = a;
+    const struct relation_node* y = b;
+    // Find difference between first numbers
+    int diff_a = x->a - y->a;
+    // If difference is not 0 we can return
+    if (diff_a != 0) {
+        return diff_a;
+    }
+    // If diff between first numbers was 0 return diff between second numbers
+    return x->b - y->b;
+}
+
+/**
  * Sort set
  * @param a Set
  */
 void set_sort(struct set* a) {
     qsort(a->nodes, a->size, sizeof(int), compare_num_nodes);
+}
+
+/**
+ * Sort relation
+ * @param r Relation
+ */
+void relation_sort(struct relation* r) {
+    qsort(r->nodes, r->size, sizeof(struct relation_node),
+          compare_relation_nodes);
 }
 
 /**
@@ -319,7 +346,7 @@ void parse_univerzum(FILE* fp) {
 void parse_set(FILE* fp, struct univerzum* u) {
     struct set s;
 
-    //Allocate memory for one node
+    // Allocate memory for one node
     s.nodes = malloc(sizeof(int));
     s.size = 0;
 
@@ -372,7 +399,7 @@ bool process_file(FILE* fp) {
         return false;
     }
 
-    //Test univerzum struct
+    // Test univerzum struct
     struct univerzum u = {0};
     u.size = 6;
     u.nodes = calloc(sizeof(*u.nodes), 6);
