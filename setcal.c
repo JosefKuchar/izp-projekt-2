@@ -14,11 +14,9 @@
 #define MAX_STRING_LENGTH 30
 #define STRING_BUFFER_SIZE MAX_STRING_LENGTH + 1  // +1 is for \0
 
-enum store_node_type { UNIVERZUM,
-                       SET,
-                       RELATION };
+enum store_node_type { UNIVERZUM, SET, RELATION };
 
-enum command_type {};
+enum command_type { EMPTY };
 
 // Struct to keep track of univerzum
 struct univerzum {
@@ -125,12 +123,12 @@ void relation_sort(struct relation* r) {
 bool univerzum_valid(struct univerzum* u) {
     // Define all illegal words inside univerzum
     const char* illegal[] = {
-        "empty", "card", "complement", "union",
-        "intersect", "minus", "subseteq", "subset",
-        "equals", "reflexive", "symmetric", "antisymmetric",
-        "transitive", "function", "domain", "codomain",
-        "injective", "surjective", "bijective", "closure_ref",
-        "closure_sym", "closure_trans", "select", "true",
+        "empty",       "card",          "complement", "union",
+        "intersect",   "minus",         "subseteq",   "subset",
+        "equals",      "reflexive",     "symmetric",  "antisymmetric",
+        "transitive",  "function",      "domain",     "codomain",
+        "injective",   "surjective",    "bijective",  "closure_ref",
+        "closure_sym", "closure_trans", "select",     "true",
         "false"};
 
     // Loop around all elements inside univerzum
@@ -528,9 +526,11 @@ bool parse_relation(FILE* fp, struct relation* r, struct univerzum* u) {
                             }
                             break;
                         }
-                        // If the iteration is the last one => relation node wasn't found in univerzum
+                        // If the iteration is the last one => relation node
+                        // wasn't found in univerzum
                         if (i == max - 1) {
-                            fprintf(stderr, "S Relation node is not in univerzum.\n");
+                            fprintf(stderr,
+                                    "S Relation node is not in univerzum.\n");
                             return false;
                         }
                     }
@@ -541,7 +541,8 @@ bool parse_relation(FILE* fp, struct relation* r, struct univerzum* u) {
             }
             r->size++;
             // Allocate memory for next node
-            r->nodes = realloc(r->nodes, sizeof(struct relation_node) * (r->size + 1));
+            r->nodes =
+                realloc(r->nodes, sizeof(struct relation_node) * (r->size + 1));
         }
         // If character is EOF or newline we can end parsing
         if (c == EOF || c == '\n') {
