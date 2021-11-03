@@ -88,10 +88,10 @@ int compare_relation_nodes(const void* a, const void* b) {
 
 /**
  * Sort set
- * @param a Set
+ * @param s Set
  */
-void set_sort(struct set* a) {
-    qsort(a->nodes, a->size, sizeof(int), compare_num_nodes);
+void set_sort(struct set* s) {
+    qsort(s->nodes, s->size, sizeof(int), compare_num_nodes);
 }
 
 /**
@@ -101,6 +101,28 @@ void set_sort(struct set* a) {
 void relation_sort(struct relation* r) {
     qsort(r->nodes, r->size, sizeof(struct relation_node),
           compare_relation_nodes);
+}
+
+/**
+ * Check if set is valid
+ * @param s Set - sorted
+ * @return True if set is valid
+ */
+bool set_valid(struct set* a) {
+    int last_item = -1;
+
+    // Loop around all elements inside set
+    for (int i = 0; i < a->size; i++) {
+        // If last item is same as current then this set is invalid
+        if (a->nodes[i] == last_item) {
+            return false;
+        }
+
+        // Update last item
+        last_item = a->nodes[i];
+    }
+    // If we didn't find two same elements then this set is valid
+    return true;
 }
 
 /**
