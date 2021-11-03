@@ -14,7 +14,9 @@
 #define MAX_STRING_LENGTH 30
 #define STRING_BUFFER_SIZE MAX_STRING_LENGTH + 1  // +1 is for \0
 
-enum store_node_type { UNIVERZUM, SET, RELATION };
+enum store_node_type { UNIVERZUM,
+                       SET,
+                       RELATION };
 
 // Struct to keep track of univerzum
 struct univerzum {
@@ -37,7 +39,7 @@ struct relation_node {
 // Struct to keep track of one relation
 struct relation {
     int size;
-    struct relation_node nodes[];
+    struct relation_node* nodes;
 };
 
 struct store_node {
@@ -112,12 +114,12 @@ void relation_sort(struct relation* r) {
 bool univerzum_valid(struct univerzum* u) {
     // Define all illegal words inside univerzum
     const char* illegal[] = {
-        "empty",       "card",          "complement", "union",
-        "intersect",   "minus",         "subseteq",   "subset",
-        "equals",      "reflexive",     "symmetric",  "antisymmetric",
-        "transitive",  "function",      "domain",     "codomain",
-        "injective",   "surjective",    "bijective",  "closure_ref",
-        "closure_sym", "closure_trans", "select",     "true",
+        "empty", "card", "complement", "union",
+        "intersect", "minus", "subseteq", "subset",
+        "equals", "reflexive", "symmetric", "antisymmetric",
+        "transitive", "function", "domain", "codomain",
+        "injective", "surjective", "bijective", "closure_ref",
+        "closure_sym", "closure_trans", "select", "true",
         "false"};
 
     // Loop around all elements inside univerzum
@@ -227,7 +229,7 @@ void print_relation(struct relation* r, struct univerzum* u) {
     // Loop around all nodes inside relation
     for (int i = 0; i < r->size; i++) {
         // Print each node inside relation
-        printf(" (%s, %s)", u->nodes[r->nodes->a], u->nodes[r->nodes->b]);
+        printf(" (%s %s)", u->nodes[r->nodes[i].a], u->nodes[r->nodes[i].b]);
     }
     printf("\n");
 }
@@ -479,6 +481,66 @@ bool parse_set(FILE* fp, struct set* s, struct univerzum* u) {
 }
 
 /**
+ * Parse relation from file stream
+ * @param fp File pointer
+ * @param r Relation
+ * @param u Univerzum
+ * @return True if everything went well
+ * */
+bool parse_relation(FILE* fp, struct relation* r, struct univerzum* u) {
+    // Allocate memory for one node
+    r->nodes = malloc(sizeof(struct relation_node));
+    r->size = 0;
+
+    char node[STRING_BUFFER_SIZE] = {0};
+    int index = 0;
+
+    while (true) {
+        int c = getc(fp);
+        if (c == '(') {
+            while (c != ')') {
+                c = getc(fp);
+
+                if (c == ' ' || c == ')') {
+                    node[index] = '\0';
+                    index = 0;
+
+                    // Compares relation node to univerzum node
+                    int max = u->size;
+                    for (int i = 0; i < max; i++) {
+                        if (!(strcmp(node, u->nodes[i]))) {
+                            if (c != ')') {
+                                r->nodes[r->size].a = i;
+                            } else {
+                                r->nodes[r->size].b = i;
+                            }
+                            break;
+                        }
+                        // If the iteration is the last one => relation node wasn't found in univerzum
+                        if (i == max - 1) {
+                            fprintf(stderr, "S Relation node is not in univerzum.\n");
+                            return false;
+                        }
+                    }
+                    continue;
+                }
+                node[index] = c;
+                index++;
+            }
+            r->size++;
+            // Allocate memory for next node
+            r->nodes = realloc(r->nodes, sizeof(struct relation_node) * (r->size + 1));
+        }
+        // If character is EOF or newline we can end parsing
+        if (c == EOF || c == '\n') {
+            break;
+        }
+    }
+    print_relation(r, u);
+    return true;
+}
+
+/**
  * Process all lines in file
  * @param fp File pointer
  * @return True if everything went well
@@ -517,6 +579,10 @@ bool process_file(FILE* fp) {
                 break;
             case 'R':
                 // TODO parse relation
+                store[store_size].type = RELATION;
+                store[store_size].obj = malloc(sizeof(struct relation));
+                ok = parse_relation(fp, store[store_size].obj, store[0].obj);
+                store_size++;
                 break;
             case 'C':
                 // TODO parse command
