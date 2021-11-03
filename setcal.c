@@ -14,7 +14,9 @@
 #define MAX_STRING_LENGTH 30
 #define STRING_BUFFER_SIZE MAX_STRING_LENGTH + 1  // +1 is for \0
 
-enum store_node_type { UNIVERZUM, SET, RELATION };
+enum store_node_type { UNIVERZUM,
+                       SET,
+                       RELATION };
 
 // Struct to keep track of univerzum
 struct univerzum {
@@ -112,12 +114,12 @@ void relation_sort(struct relation* r) {
 bool univerzum_valid(struct univerzum* u) {
     // Define all illegal words inside univerzum
     const char* illegal[] = {
-        "empty",       "card",          "complement", "union",
-        "intersect",   "minus",         "subseteq",   "subset",
-        "equals",      "reflexive",     "symmetric",  "antisymmetric",
-        "transitive",  "function",      "domain",     "codomain",
-        "injective",   "surjective",    "bijective",  "closure_ref",
-        "closure_sym", "closure_trans", "select",     "true",
+        "empty", "card", "complement", "union",
+        "intersect", "minus", "subseteq", "subset",
+        "equals", "reflexive", "symmetric", "antisymmetric",
+        "transitive", "function", "domain", "codomain",
+        "injective", "surjective", "bijective", "closure_ref",
+        "closure_sym", "closure_trans", "select", "true",
         "false"};
 
     // Loop around all elements inside univerzum
@@ -390,11 +392,10 @@ void free_store(struct store_node* store, int size) {
  * Parse univerzum from file stream
  * @param fp File pointer
  */
-void parse_univerzum(FILE* fp) {
-    struct univerzum u;
-    // Allocate memory for 10 strings for now
-    u.nodes = calloc(sizeof(*u.nodes), 10);
-    u.size = 1;
+void parse_univerzum(FILE* fp, struct univerzum* u) {
+    // Allocate memory for 1 node
+    u->nodes = calloc(sizeof(u->nodes), 1);
+    u->size = 1;
 
     int index = 0;
 
@@ -405,19 +406,21 @@ void parse_univerzum(FILE* fp) {
             // TODO: Return the actual univerzum
             break;
         } else if (c == ' ') {
-            u.size++;
+            u->size++;
             index = 0;
+            u->nodes = realloc(u->nodes, sizeof(*u->nodes) * u->size);
+            memset(u->nodes[u->size - 1], 0, STRING_BUFFER_SIZE);
             continue;
         } else if (!isalpha(c)) {
             // TODO: Handle when character is not alphanumeric
         }
 
-        u.nodes[u.size - 1][index] = c;
+        u->nodes[u->size - 1][index] = c;
         index++;
     }
 
-    print_univerzum(&u);
-    free_univerzum(&u);
+    print_univerzum(u);
+    // free_univerzum(&u);
 }
 
 /**
@@ -440,6 +443,7 @@ void parse_set(FILE* fp, struct univerzum* u) {
 
         if (c == ' ' || c == EOF || c == '\n') {
             s.size++;
+            node[index] = '\0';
             index = 0;
             // Allocate memory for next node
             s.nodes = realloc(s.nodes, sizeof(int) * s.size + 1);
@@ -450,6 +454,11 @@ void parse_set(FILE* fp, struct univerzum* u) {
                 if (!(strcmp(node, u->nodes[i]))) {
                     s.nodes[s.size - 1] = i;
                     break;
+                }
+                // If the iteration is the last one => set node wasn't found in univerzum
+                if (i == max - 1) {
+                    fprintf(stderr, "S Set node is not in univerzum.\n");
+                    return;
                 }
             }
             // If character is EOF or newline we can end parsing
@@ -481,17 +490,6 @@ bool process_file(FILE* fp) {
         return false;
     }
 
-    // Test univerzum struct
-    struct univerzum u = {0};
-    u.size = 6;
-    u.nodes = calloc(sizeof(*u.nodes), 6);
-    strcpy(u.nodes[0], "a");
-    strcpy(u.nodes[1], "b");
-    strcpy(u.nodes[2], "c");
-    strcpy(u.nodes[3], "x");
-    strcpy(u.nodes[4], "y");
-    strcpy(u.nodes[5], "z");
-
     int c = 0;
     // Loop around all chars
     while ((c = getc(fp)) != EOF) {
@@ -501,11 +499,14 @@ bool process_file(FILE* fp) {
         switch (c) {
             case 'U':
                 // TODO parse univerzum better
-                parse_univerzum(fp);
+                store[store_size].type = UNIVERZUM;
+                store[store_size].obj = malloc(sizeof(struct univerzum));
+                parse_univerzum(fp, (struct univerzum*)store[store_size].obj);
+                store_size++;
                 break;
             case 'S':
                 // TODO parse set
-                parse_set(fp, &u);
+                parse_set(fp, store[0].obj);
                 break;
             case 'R':
                 // TODO parse relation
@@ -521,8 +522,6 @@ bool process_file(FILE* fp) {
 
     // Free store from memory
     free_store(store, store_size);
-
-    free_univerzum(&u);
 
     return true;
 }
