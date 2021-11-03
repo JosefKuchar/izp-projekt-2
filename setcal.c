@@ -126,6 +126,29 @@ bool set_valid(struct set* a) {
 }
 
 /**
+ * Check if relation is valid
+ * @param r Relation - sorted
+ * @return True if relation is valid
+ */
+bool relation_valid(struct relation* r) {
+    struct relation_node last_item = {.a = -1, .b = -1};
+
+    // Loop around all elements inside relation
+    for (int i = 0; i < r->size; i++) {
+        // If last item is same as current then this relation is invalid
+        if (r->nodes[i].a == last_item.a && r->nodes[i].b == last_item.b) {
+            return false;
+        }
+
+        // Update last item
+        last_item.a = r->nodes[i].a;
+        last_item.b = r->nodes[i].b;
+    }
+    // If we didn't find two same relation nodes then this set is valid
+    return true;
+}
+
+/**
  * Print univerzum
  * @param u Univerzum
  */
