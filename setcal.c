@@ -16,6 +16,8 @@
 
 enum store_node_type { UNIVERZUM, SET, RELATION };
 
+enum command_type {};
+
 // Struct to keep track of univerzum
 struct univerzum {
     int size;
@@ -40,6 +42,15 @@ struct relation {
     struct relation_node nodes[];
 };
 
+// Struct to keep track of one command
+struct command {
+    enum command_type type;  // Command type
+    int a;                   // First operand (set or relation)
+    int b;                   // Second operand
+    int n;                   // Line number for bonus
+};
+
+// Struct to keep track of one node inside relation
 struct store_node {
     enum store_node_type type;
     void* obj;
