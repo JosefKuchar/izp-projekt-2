@@ -14,7 +14,7 @@
 #define MAX_STRING_LENGTH 30
 #define STRING_BUFFER_SIZE MAX_STRING_LENGTH + 1  // +1 is for \0
 
-enum store_node_type { UNIVERZUM, SET, RELATION };
+enum store_node_type { UNIVERZUM, SET, RELATION, COMMAND };
 
 enum command_type { EMPTY };
 
@@ -573,6 +573,10 @@ bool parse_relation(FILE* fp, struct relation* r, struct univerzum* u) {
     return true;
 }
 
+// bool parse_command(FILE* fp, struct command* c) {
+
+// }
+
 /**
  * Process univerzum
  * @param fp File pointer
@@ -634,6 +638,27 @@ bool process_set(FILE* fp,
     // Check if set is valid
     return set_valid(store[index].obj);
 }
+
+/**
+ * @param fp File pointer
+ * @param store Store
+ * @param store_size Store size
+ * @return True if everything went well
+ */
+// bool process_command(FILE* fp, struct store_node* store, int* store_size) {
+//     int index = *store_size;
+
+//     // Init command object
+//     store[index].type = COMMAND;
+//     // TODO check malloc
+//     store[index].obj = malloc(sizeof(struct command));
+//     (*store_size)++;
+
+//     // Parse command
+//     parse_command(fp, store[index].obj);
+
+//     return true;
+// }
 
 /**
  * @param fp File pointer
@@ -703,7 +728,7 @@ bool process_file(FILE* fp) {
                 ok = process_relation(fp, store, &store_size, store[0].obj);
                 break;
             case 'C':
-                // TODO parse command
+                // ok = process_command(fp, store, &store_size);
                 break;
             default:
                 // TODO handle other characters
