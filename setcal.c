@@ -554,6 +554,34 @@ bool parse_relation(FILE* fp, struct relation* r, struct univerzum* u) {
 }
 
 /**
+ * Process univerzum
+ * @param fp File pointer
+ * @param store Store
+ * @param store_size Store size
+ * @return True if everything went well
+ */
+bool process_univerzum(FILE* fp, struct store_node* store, int* store_size) {
+    int index = *store_size;
+
+    // Init univerzum object
+    store[index].type = UNIVERZUM;
+    // TODO check malloc
+    store[index].obj = malloc(sizeof(struct univerzum));
+    (*store_size)++;
+
+    // Parse univerzum
+    bool ok = parse_univerzum(fp, store[index].obj);
+
+    // Handle parsing
+    if (!ok) {
+        return false;
+    }
+
+    // Check if univerzum is valid
+    return univerzum_valid(store[index].obj);
+}
+
+/**
  * Process all lines in file
  * @param fp File pointer
  * @return True if everything went well
@@ -577,11 +605,7 @@ bool process_file(FILE* fp) {
 
         switch (c) {
             case 'U':
-                // TODO parse univerzum better
-                store[store_size].type = UNIVERZUM;
-                store[store_size].obj = malloc(sizeof(struct univerzum));
-                ok = parse_univerzum(fp, store[store_size].obj);
-                store_size++;
+                ok = process_univerzum(fp, store, &store_size);
                 break;
             case 'S':
                 // TODO parse set
