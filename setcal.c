@@ -260,14 +260,15 @@ struct set* set_complement(struct set* a, struct univerzum* u) {
     struct set* com = malloc(sizeof(struct univerzum));
     com->nodes = malloc(sizeof(int));
     com->size = 0;
-    //Iterates through univerzum
+    // Iterates through univerzum
     for (int i = 0; i < u->size; i++) {
-        //Iterates through set
+        // Iterates through set
         for (int k = 0; k < a->size; k++) {
             if (a->nodes[k] == i) {
                 break;
             }
-            // If the iteration is the last one => node wasn't found in univerzum
+            // If the iteration is the last one => node wasn't found in
+            // univerzum
             if (k == a->size - 1) {
                 com->nodes[com->size++] = i;
                 // Allocate memory for next node
@@ -601,6 +602,73 @@ bool process_univerzum(FILE* fp, struct store_node* store, int* store_size) {
 }
 
 /**
+ * Process set
+ * @param fp File pointer
+ * @param store Store
+ * @param store_size Store size
+ * @return True if everything went well
+ */
+bool process_set(FILE* fp,
+                 struct store_node* store,
+                 int* store_size,
+                 struct univerzum* u) {
+    int index = *store_size;
+
+    // Init set object
+    store[index].type = SET;
+    // TODO check malloc
+    store[index].obj = malloc(sizeof(struct set));
+    (*store_size)++;
+
+    // Parse set
+    bool ok = parse_set(fp, store[index].obj, u);
+
+    // Handle parsing
+    if (!ok) {
+        return false;
+    }
+
+    // Sort set
+    set_sort(store[index].obj);
+
+    // Check if set is valid
+    return set_valid(store[index].obj);
+}
+
+/**
+ * @param fp File pointer
+ * @param store Store
+ * @param store_size Store size
+ * @return True if everything went well
+ */
+bool process_relation(FILE* fp,
+                      struct store_node* store,
+                      int* store_size,
+                      struct univerzum* u) {
+    int index = *store_size;
+
+    // Init relation object
+    store[index].type = RELATION;
+    // TODO check malloc
+    store[index].obj = malloc(sizeof(struct relation));
+    (*store_size)++;
+
+    // Parse set
+    bool ok = parse_relation(fp, store[index].obj, u);
+
+    // Handle parsing
+    if (!ok) {
+        return false;
+    }
+
+    // Sort relation
+    relation_sort(store[index].obj);
+
+    // Check if relation is valid
+    return relation_valid(store[index].obj);
+}
+
+/**
  * Process all lines in file
  * @param fp File pointer
  * @return True if everything went well
@@ -627,18 +695,12 @@ bool process_file(FILE* fp) {
                 ok = process_univerzum(fp, store, &store_size);
                 break;
             case 'S':
-                // TODO parse set
-                store[store_size].type = SET;
-                store[store_size].obj = malloc(sizeof(struct set));
-                ok = parse_set(fp, store[store_size].obj, store[0].obj);
-                store_size++;
+                // TODO check if univerzum is at 0
+                ok = process_set(fp, store, &store_size, store[0].obj);
                 break;
             case 'R':
-                // TODO parse relation
-                store[store_size].type = RELATION;
-                store[store_size].obj = malloc(sizeof(struct relation));
-                ok = parse_relation(fp, store[store_size].obj, store[0].obj);
-                store_size++;
+                // TODO check if univerzum is at 0
+                ok = process_relation(fp, store, &store_size, store[0].obj);
                 break;
             case 'C':
                 // TODO parse command
