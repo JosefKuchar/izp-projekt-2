@@ -4,10 +4,11 @@
  * 2021
  */
 
+#include <ctype.h>    // Char functions
 #include <stdbool.h>  // Bool type
 #include <stdio.h>    // IO functions
 #include <stdlib.h>   // EXIT macros
-#include <string.h>
+#include <string.h>   // String manipulation functions
 
 // Define string length hard limits
 #define MAX_STRING_LENGTH 30
@@ -101,6 +102,42 @@ void set_sort(struct set* s) {
 void relation_sort(struct relation* r) {
     qsort(r->nodes, r->size, sizeof(struct relation_node),
           compare_relation_nodes);
+}
+
+/**
+ * Check if univerzum is valid (doesn't contain reserved words, same words)
+ * @param u Univerzum
+ * @return True if univerzum is valid
+ */
+bool univerzum_valid(struct univerzum* u) {
+    // Define all illegal words inside univerzum
+    const char* illegal[] = {
+        "empty",       "card",          "complement", "union",
+        "intersect",   "minus",         "subseteq",   "subset",
+        "equals",      "reflexive",     "symmetric",  "antisymmetric",
+        "transitive",  "function",      "domain",     "codomain",
+        "injective",   "surjective",    "bijective",  "closure_ref",
+        "closure_sym", "closure_trans", "select",     "true",
+        "false"};
+
+    // Loop around all elements inside univerzum
+    for (int i = 0; i < u->size; i++) {
+        // Loop around all illegal words
+        // TODO: Remove hardcoded 25
+        for (int j = 0; j < 25; j++) {
+            if (strcmp(u->nodes[i], illegal[j]) == 0) {
+                return false;
+            }
+        }
+        // Check for repeated word
+        for (int j = i + 1; j < u->size; j++) {
+            if (strcmp(u->nodes[i], u->nodes[j]) == 0) {
+                return false;
+            }
+        }
+    }
+    // Univerzum is valid if everything went well
+    return true;
 }
 
 /**
@@ -367,12 +404,12 @@ void parse_univerzum(FILE* fp) {
         if (c == EOF || c == '\n') {
             // TODO: Return the actual univerzum
             break;
-        }
-
-        if (c == ' ') {
+        } else if (c == ' ') {
             u.size++;
             index = 0;
             continue;
+        } else if (!isalpha(c)) {
+            // TODO: Handle when character is not alphanumeric
         }
 
         u.nodes[u.size - 1][index] = c;
