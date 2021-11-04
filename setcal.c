@@ -1009,12 +1009,12 @@ bool process_command(FILE* fp, struct store* store, bool empty) {
  * @param store Store
  * @return True if line was parsed correctly
  */
-bool process_line(FILE* fp, char c, int i, struct store* store) {
+bool process_line(FILE* fp, char c, struct store* store) {
     int next = getc(fp);
 
     // This shouldn't happen with valid file
     // Ensure that univerzum will be first
-    if ((next == EOF) || (i == 0 && c != 'U')) {
+    if ((next == EOF) || (store->size == 0 && c != 'U')) {
         return false;
     }
 
@@ -1040,39 +1040,26 @@ bool process_line(FILE* fp, char c, int i, struct store* store) {
  * @param fp File pointer
  * @return True if everything went well
  */
-bool process_file(FILE* fp) {
-    struct store store;
-    store.size = 0;
-    // Allocate enough memory for store
+bool process_file(FILE* fp, struct store* store) {
     // TODO Realloc
-    store.nodes = malloc(sizeof(struct store_node) * 1000);
-    if (store.nodes == NULL) {
-        fprintf(stderr, "Malloc error!\n");
-        return false;
-    }
-
-    int c = 0;
     // Loop around all lines
-    for (int i = 0; (c = getc(fp)) != EOF; i++) {
-        if (!process_line(fp, c, i, &store)) {
+    for (int c = 0; (c = getc(fp)) != EOF;) {
+        if (!process_line(fp, c, store)) {
             fprintf(stderr, "Error parsing file!\n");
-            free_store(&store);
             return false;
         }
     }
     // Check store validity
-    if (!store_valid(&store)) {
+    if (!store_valid(store)) {
         fprintf(stderr, "Invalid definition of file parts!\n");
-        free_store(&store);
         return false;
     }
     // Run store
-    if (!store_runner(&store)) {
-        free_store(&store);
+    if (!store_runner(store)) {
+        fprintf(stderr, "Error running commands!\n");
         return false;
     }
-    // Free store from memory
-    free_store(&store);
+
     return true;
 }
 
@@ -1140,9 +1127,17 @@ int main(int argc, char* argv[]) {
     }
 
     // Process file
-    if (!process_file(fp)) {
+    struct store store;
+    store.size = 0;
+    store.nodes = malloc(sizeof(struct store_node) * 1000);
+    if (store.nodes == NULL) {
+        fprintf(stderr, "Malloc error!\n");
+        return false;
+    }
+    if (!process_file(fp, &store)) {
         return EXIT_FAILURE;
     }
+    free_store(&store);
 
     // Close file
     if (!close_file(fp)) {
