@@ -313,12 +313,29 @@ struct set* set_intersect(struct set* a, struct set* b) {
     }
     return intersect;
 }
-/*
 
-void set_minus(struct set* a, struct set* b) {
-    // TODO
+struct set* set_minus(struct set* a, struct set* b) {
+    // Allocate memory minus set
+    struct set* minus = malloc(sizeof(struct set));
+    minus->nodes = malloc(sizeof(int));
+    minus->size = 0;
+
+    int i = 0, k = 0;
+    while (i < a->size) {
+        if (k > b->size || a->nodes[i] < b->nodes[k]) {
+            minus->nodes = realloc(minus->nodes, sizeof(int) * (minus->size + 1));
+            minus->nodes[minus->size++] = a->nodes[i++];
+        } else if (a->nodes[i] == b->nodes[k]) {
+            i++;
+            k++;
+        } else {
+            k++;
+        }
+    }
+    return minus;
 }
 
+/*
 void set_subseteq(struct set* a, struct set* b) {
     // TODO
 }
