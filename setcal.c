@@ -283,7 +283,8 @@ struct set* set_union(struct set* a, struct set* b) {
 
     int i = 0, k = 0;
     while (i < a->size || k < b->size) {
-        s_union->nodes = realloc(s_union->nodes, sizeof(int) * (s_union->size + 1));
+        s_union->nodes =
+            realloc(s_union->nodes, sizeof(int) * (s_union->size + 1));
         if (i > a->size) {
             s_union->nodes[s_union->size] = b->nodes[k++];
         } else if (k > b->size) {
@@ -612,10 +613,7 @@ bool process_univerzum(FILE* fp, struct store_node* store, int* store_size) {
     (*store_size)++;
 
     // Parse univerzum
-    bool ok = parse_univerzum(fp, store[index].obj);
-
-    // Handle parsing
-    if (!ok) {
+    if (!parse_univerzum(fp, store[index].obj)) {
         return false;
     }
 
@@ -642,11 +640,8 @@ bool process_set(FILE* fp,
     store[index].obj = malloc(sizeof(struct set));
     (*store_size)++;
 
-    // Parse set
-    bool ok = parse_set(fp, store[index].obj, u);
-
     // Handle parsing
-    if (!ok) {
+    if (!parse_set(fp, store[index].obj, u)) {
         return false;
     }
 
@@ -696,11 +691,8 @@ bool process_relation(FILE* fp,
     store[index].obj = malloc(sizeof(struct relation));
     (*store_size)++;
 
-    // Parse set
-    bool ok = parse_relation(fp, store[index].obj, u);
-
-    // Handle parsing
-    if (!ok) {
+    // Parse relation
+    if (!parse_relation(fp, store[index].obj, u)) {
         return false;
     }
 
