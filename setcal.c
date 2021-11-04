@@ -135,12 +135,12 @@ bool univerzum_valid(struct univerzum* u) {
                              "closure_sym", "closure_trans",
                              "select",      "true",
                              "false",       ""};
+    int size = sizeof(illegal) / sizeof(illegal[0]);
 
     // Loop around all elements inside univerzum
     for (int i = 0; i < u->size; i++) {
         // Loop around all illegal words
-        // TODO: Remove hardcoded 26
-        for (int j = 0; j < 26; j++) {
+        for (int j = 0; j < size; j++) {
             if (strcmp(u->nodes[i], illegal[j]) == 0) {
                 fprintf(stderr, "Illegal word inside univerzum!\n");
                 return false;
