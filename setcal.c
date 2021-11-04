@@ -402,6 +402,12 @@ struct set* set_minus(struct set* a, struct set* b) {
     return minus;
 }
 
+/**
+ * Set subseteq function
+ * @param a Set - sorted
+ * @param b Set - sorted
+ * @return True if a is subset of b or equal to b
+ */
 bool set_subseteq(struct set* a, struct set* b) {
     int k = 0;
     for (int i = 0; i < b->size; i++) {
@@ -415,6 +421,12 @@ bool set_subseteq(struct set* a, struct set* b) {
     return (k == a->size);
 }
 
+/**
+ * Set subset function
+ * @param a Set - sorted
+ * @param b Set - sorted
+ * @return True if a is subset of b
+ */
 bool set_subset(struct set* a, struct set* b) {
     int k = 0;
     for (int i = 0; i < b->size; i++) {
