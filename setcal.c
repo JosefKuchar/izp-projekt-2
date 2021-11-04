@@ -21,26 +21,26 @@ enum command_type { EMPTY };
 
 // Struct to keep track of univerzum
 struct univerzum {
-    int size;
-    char (*nodes)[STRING_BUFFER_SIZE];
+    int size;                           // Univerzum size
+    char (*nodes)[STRING_BUFFER_SIZE];  // Array of strings
 };
 
 // Struct to keep track of one set
 struct set {
-    int size;
-    int* nodes;
+    int size;    // Set size
+    int* nodes;  // Set nodes
 };
 
 // Struct to keep track of on node inside relation
 struct relation_node {
-    int a;
-    int b;
+    int a;  // First number
+    int b;  // Second number
 };
 
 // Struct to keep track of one relation
 struct relation {
-    int size;
-    struct relation_node* nodes;
+    int size;                     // Relation size
+    struct relation_node* nodes;  // Relation nodes
 };
 
 // Struct to keep track of one command
@@ -53,8 +53,8 @@ struct command {
 
 // Struct to keep track of one node inside relation
 struct store_node {
-    enum store_node_type type;
-    void* obj;
+    enum store_node_type type;  // Store node type
+    void* obj;                  // Pointer to node
 };
 
 /**
@@ -85,7 +85,7 @@ int compare_num_nodes(const void* a, const void* b) {
  * @param b Pointer to second relation node
  * @return Difference between two relation nodes
  */
-int compare_relation_nodes(const void* a, const void* b) {
+int compare_rel_nodes(const void* a, const void* b) {
     // Cast void pointers to struct pointers
     const struct relation_node* x = a;
     const struct relation_node* y = b;
@@ -112,8 +112,7 @@ void set_sort(struct set* s) {
  * @param r Relation
  */
 void relation_sort(struct relation* r) {
-    qsort(r->nodes, r->size, sizeof(struct relation_node),
-          compare_relation_nodes);
+    qsort(r->nodes, r->size, sizeof(struct relation_node), compare_rel_nodes);
 }
 
 /**
