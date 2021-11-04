@@ -1005,20 +1005,18 @@ bool process_command(FILE* fp, struct store* store, bool empty) {
  * Process one line
  * @param fp File pointer
  * @param c Starting character
- * @param i Current line index
  * @param store Store
  * @return True if line was parsed correctly
  */
 bool process_line(FILE* fp, char c, struct store* store) {
     int next = getc(fp);
+    bool empty = next == '\n';
 
     // This shouldn't happen with valid file
     // Ensure that univerzum will be first
-    if ((next == EOF) || (store->size == 0 && c != 'U')) {
+    if ((next != ' ' && !empty) || (store->size == 0 && c != 'U')) {
         return false;
     }
-
-    bool empty = next == '\n';
 
     switch (c) {
         case 'U':
@@ -1038,10 +1036,11 @@ bool process_line(FILE* fp, char c, struct store* store) {
 /**
  * Process all lines in file
  * @param fp File pointer
+ * @param store Store
  * @return True if everything went well
  */
 bool process_file(FILE* fp, struct store* store) {
-    // TODO Realloc
+    // TODO Realloc store
     // Loop around all lines
     for (int c = 0; (c = getc(fp)) != EOF;) {
         if (!process_line(fp, c, store)) {
