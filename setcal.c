@@ -1019,10 +1019,12 @@ bool process_file(FILE* fp) {
 
     int c = 0;
     // Loop around all chars
-    while ((c = getc(fp)) != EOF) {
+    for (int i = 0; (c = getc(fp)) != EOF; i++) {
         int next = getc(fp);
-
-        if (next == EOF) {
+        // This shouldn't happen with valid file
+        // Ensure that univerzum will be first
+        if ((next == EOF) || (i == 0 && c != 'U')) {
+            ok = false;
             break;
         }
 
@@ -1033,11 +1035,9 @@ bool process_file(FILE* fp) {
                 ok = process_univerzum(fp, &store, empty);
                 break;
             case 'S':
-                // TODO check if univerzum is at 0
                 ok = process_set(fp, &store, empty);
                 break;
             case 'R':
-                // TODO check if univerzum is at 0
                 ok = process_relation(fp, &store, empty);
                 break;
             case 'C':
@@ -1052,6 +1052,10 @@ bool process_file(FILE* fp) {
         if (!ok) {
             break;
         }
+    }
+
+    if (!ok) {
+        fprintf(stderr, "Error parsing file!\n");
     }
 
     if (ok) {
