@@ -1,6 +1,7 @@
 /**
  * @name IZP Projekt 2 - Prace s datovymi strukturami
  * @author Josef Kuchar - xkucha28
+ * @author Martin Hemza - xhemza05
  * 2021
  */
 
@@ -300,11 +301,28 @@ struct set* set_union(struct set* a, struct set* b) {
     }
     return s_union;
 }
-/*
 
-void set_intersect(struct set* a, struct set* b) {
+struct set* set_intersect(struct set* a, struct set* b) {
     // TODO
+    struct set* intersect = malloc(sizeof(struct set));
+    intersect->nodes = malloc(sizeof(int));
+    intersect->size = 0;
+
+    int i = 0, k = 0;
+    while (i < a->size && k < b->size) {
+        if (a->nodes[i] == b->nodes[k]) {
+            intersect->nodes = realloc(intersect->nodes, sizeof(int) * (intersect->size + 1));
+            intersect->nodes[intersect->size++] = a->nodes[i++];
+            k++;
+        } else if (a->nodes[i] < b->nodes[k]) {
+            i++;
+        } else {
+            k++;
+        }
+    }
+    return intersect;
 }
+/*
 
 void set_minus(struct set* a, struct set* b) {
     // TODO
