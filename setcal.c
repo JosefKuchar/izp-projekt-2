@@ -122,27 +122,34 @@ void relation_sort(struct relation* r) {
  */
 bool univerzum_valid(struct univerzum* u) {
     // Define all illegal words inside univerzum
-    const char* illegal[] = {
-        "empty",       "card",          "complement", "union",
-        "intersect",   "minus",         "subseteq",   "subset",
-        "equals",      "reflexive",     "symmetric",  "antisymmetric",
-        "transitive",  "function",      "domain",     "codomain",
-        "injective",   "surjective",    "bijective",  "closure_ref",
-        "closure_sym", "closure_trans", "select",     "true",
-        "false"};
+    const char* illegal[] = {"empty",       "card",
+                             "complement",  "union",
+                             "intersect",   "minus",
+                             "subseteq",    "subset",
+                             "equals",      "reflexive",
+                             "symmetric",   "antisymmetric",
+                             "transitive",  "function",
+                             "domain",      "codomain",
+                             "injective",   "surjective",
+                             "bijective",   "closure_ref",
+                             "closure_sym", "closure_trans",
+                             "select",      "true",
+                             "false",       ""};
 
     // Loop around all elements inside univerzum
     for (int i = 0; i < u->size; i++) {
         // Loop around all illegal words
-        // TODO: Remove hardcoded 25
-        for (int j = 0; j < 25; j++) {
+        // TODO: Remove hardcoded 26
+        for (int j = 0; j < 26; j++) {
             if (strcmp(u->nodes[i], illegal[j]) == 0) {
+                fprintf(stderr, "Illegal word inside univerzum!\n");
                 return false;
             }
         }
         // Check for repeated word
         for (int j = i + 1; j < u->size; j++) {
             if (strcmp(u->nodes[i], u->nodes[j]) == 0) {
+                fprintf(stderr, "Repeated word inside univerzum!\n");
                 return false;
             }
         }
@@ -161,6 +168,7 @@ bool set_valid(struct set* a) {
     for (int i = 1; i < a->size; i++) {
         // If last item is same as current then this set is invalid
         if (a->nodes[i] == a->nodes[i - 1]) {
+            fprintf(stderr, "Repeated item inside set!\n");
             return false;
         }
     }
@@ -179,6 +187,7 @@ bool relation_valid(struct relation* r) {
         // If last item is same as current then this relation is invalid
         if (r->nodes[i].a == r->nodes[i - 1].a &&
             r->nodes[i].b == r->nodes[i - 1].b) {
+            fprintf(stderr, "Repeated item inside relation");
             return false;
         }
     }
@@ -594,16 +603,18 @@ bool parse_univerzum(FILE* fp, struct univerzum* u) {
         int c = getc(fp);
         // If character is EOF or newline we can end parsing
         if (c == EOF || c == '\n') {
-            // TODO: Return the actual univerzum
             break;
+            // If character is space create new node
         } else if (c == ' ') {
             u->size++;
             index = 0;
             u->nodes = realloc(u->nodes, sizeof(*u->nodes) * u->size);
             memset(u->nodes[u->size - 1], 0, STRING_BUFFER_SIZE);
             continue;
+            // Handle invalid characters
         } else if (!isalpha(c)) {
-            // TODO: Handle when character is not alphanumeric
+            fprintf(stderr, "Invalid character in universum\n");
+            return false;
         }
 
         u->nodes[u->size - 1][index] = c;
@@ -773,6 +784,7 @@ bool process_univerzum(FILE* fp,
 
     // Parse univerzum
     if (!parse_univerzum(fp, store[index].obj)) {
+        fprintf(stderr, "Error parsing univerzum!\n");
         return false;
     }
 
@@ -807,6 +819,7 @@ bool process_set(FILE* fp,
 
     // Handle parsing
     if (!parse_set(fp, store[index].obj, u)) {
+        fprintf(stderr, "Error parsing set!\n");
         return false;
     }
 
@@ -841,7 +854,10 @@ bool process_command(FILE* fp,
     (*store_size)++;
 
     // Parse command
-    parse_command(fp, store[index].obj);
+    if (!parse_command(fp, store[index].obj)) {
+        fprintf(stderr, "Error parsing command\n");
+        return false;
+    }
 
     return true;
 }
@@ -872,6 +888,7 @@ bool process_relation(FILE* fp,
 
     // Parse relation
     if (!parse_relation(fp, store[index].obj, u)) {
+        fprintf(stderr, "Error parsing relation!\n");
         return false;
     }
 
@@ -1010,7 +1027,6 @@ int main(int argc, char* argv[]) {
 
     // Process file
     if (!process_file(fp)) {
-        fprintf(stderr, "Error parsing file!\n");
         return EXIT_FAILURE;
     }
 
