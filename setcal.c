@@ -1135,6 +1135,7 @@ int main(int argc, char* argv[]) {
         return false;
     }
     if (!process_file(fp, &store)) {
+        free_store(&store);
         return EXIT_FAILURE;
     }
     free_store(&store);
