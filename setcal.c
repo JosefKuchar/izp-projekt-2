@@ -909,6 +909,7 @@ bool process_file(FILE* fp) {
     bool ok = false;
 
     // Allocate enough memory for store
+    // TODO Realloc
     struct store_node* store = malloc(sizeof(struct store_node) * 1000);
     int store_size = 0;
     if (store == NULL) {
@@ -944,7 +945,8 @@ bool process_file(FILE* fp) {
                 ok = process_command(fp, store, &store_size, empty);
                 break;
             default:
-                // TODO handle other characters
+                fprintf(stderr, "Invalid starting character!\n");
+                ok = false;
                 break;
         }
 
