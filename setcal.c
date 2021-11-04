@@ -354,7 +354,7 @@ void set_card(struct set* a) {
 struct set* set_complement(struct set* a, struct univerzum* u) {
     // Allocate memory complement set
     struct set* complement = malloc(sizeof(struct set));
-    complement->nodes = malloc((u->size*sizeof(int)-sizeof(a->nodes)));
+    complement->nodes = malloc((u->size * sizeof(int) - sizeof(a->nodes)));
     complement->size = 0;
 
     int i = 0, k = 0;
@@ -1134,6 +1134,7 @@ int main(int argc, char* argv[]) {
     }
     if (!process_file(fp, &store)) {
         free_store(&store);
+        close_file(fp);
         return EXIT_FAILURE;
     }
     free_store(&store);
