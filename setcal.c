@@ -209,10 +209,6 @@ bool relation_valid(struct relation* r) {
  * @return True if store is valid
  */
 bool store_valid(struct store* store) {
-    // Empty store isn't correct
-    if (store->size == 0) {
-        return false;
-    }
     // Ensure good order of node types
     bool u_found = false, s_or_r_found = false, c_found = false;
     for (int i = 0; i < store->size; i++) {
@@ -524,24 +520,25 @@ bool set_equals(struct set* a, struct set* b) {
 /*--------------------------- RELATION FUNCTIONS ----------------------------*/
 
 /**
-* Find out if relation is reflexive
-* @param r Relation
-* @param u Univerzum
-* @return True if relation is reflexive
-*/
+ * Find out if relation is reflexive
+ * @param r Relation
+ * @param u Univerzum
+ * @return True if relation is reflexive
+ */
 bool relation_reflexive(struct relation* r, struct univerzum* u) {
     bool reflex_for_i;
 
     // Loop around all universe nodes
-    for(int i = 0; i < u->size; i++){
+    for (int i = 0; i < u->size; i++) {
         reflex_for_i = false;
 
         // Loop around all relation nodes
-        for(int j = 0; j < r->size; j++){
-            // Look for relation nodes that have same value as current universe node
-            if(r->nodes[j].a == i){
+        for (int j = 0; j < r->size; j++) {
+            // Look for relation nodes that have same value as current universe
+            // node
+            if (r->nodes[j].a == i) {
                 // If node is reflective, move on to next universe node
-                if(r->nodes[j].a == r->nodes[j].b){
+                if (r->nodes[j].a == r->nodes[j].b) {
                     reflex_for_i = true;
                     break;
                 }
@@ -549,7 +546,7 @@ bool relation_reflexive(struct relation* r, struct univerzum* u) {
         }
 
         // Relation isn't reflexive
-        if(!reflex_for_i){
+        if (!reflex_for_i) {
             return false;
         }
     }
