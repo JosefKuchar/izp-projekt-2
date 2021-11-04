@@ -210,7 +210,7 @@ bool store_valid(struct store_node* store, int store_size) {
     // Ensure good order of node types
     bool u_found = false, s_or_r_found = false, c_found = false;
     for (int i = 0; i < store_size; i++) {
-        // Univerzum can only one and it has to be first element
+        // Univerzum can only be one and it has to be first element
         if (store[i].type == UNIVERZUM) {
             if (i == 0) {
                 u_found = true;
