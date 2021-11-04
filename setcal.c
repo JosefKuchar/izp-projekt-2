@@ -8,6 +8,7 @@
 /*-------------------------------- LIBRARIES --------------------------------*/
 
 #include <ctype.h>    // Char functions
+#include <limits.h>   // Number limits
 #include <stdbool.h>  // Bool type
 #include <stdio.h>    // IO functions
 #include <stdlib.h>   // EXIT macros
@@ -601,6 +602,35 @@ void free_store(struct store_node* store, int size) {
     free(store);
 }
 
+/*------------------------------- STORE RUNNER ------------------------------*/
+
+/**
+ * Function for running all things on store
+ * @param store Store
+ * @param store_size Store size
+ * @return True if everything went well
+ */
+bool store_runner(struct store_node* store, int store_size) {
+    for (int i = 0; i < store_size; i++) {
+        switch (store[i].type) {
+            case UNIVERZUM:
+                print_univerzum(store[i].obj);
+                break;
+            case SET:
+                print_set(store[i].obj, store[0].obj);
+                break;
+            case RELATION:
+                print_relation(store[i].obj, store[0].obj);
+                break;
+            case COMMAND:
+                printf("Not implemented!\n");
+                break;
+        }
+    }
+
+    return true;
+}
+
 /*------------------------------- FILE PARSING ------------------------------*/
 
 /**
@@ -1003,7 +1033,7 @@ bool process_file(FILE* fp) {
     }
 
     if (ok) {
-        print_store(store, store_size);
+        store_runner(store, store_size);
     }
 
     // Free store from memory
