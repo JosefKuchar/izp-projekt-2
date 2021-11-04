@@ -604,6 +604,36 @@ void free_store(struct store_node* store, int size) {
 /*------------------------------- FILE PARSING ------------------------------*/
 
 /**
+ * Parse line number
+ * @param string String to be parsed
+ * @param result Result
+ * @return True if everything went well
+ */
+bool parse_line_number(char* string, int* result) {
+    char* end_p;
+    long number = strtol(string, &end_p, 10);
+
+    // Check if string starts with number, also check if it ends with number
+    if (end_p == string || *end_p != '\0') {
+        fprintf(stderr, "Invalid characters inside number!\n");
+        return false;
+    }
+    // Check if number is positive
+    if (number <= 0) {
+        fprintf(stderr, "Invalid line number!\n");
+        return false;
+    }
+    // Clamp number to INT_MAX
+    if (number > (long)INT_MAX) {
+        number = INT_MAX;
+    }
+    // Return result by reference
+    *result = number;
+
+    return true;
+}
+
+/**
  * Parse univerzum from file stream
  * @param fp File pointer
  * @param u Univerzum
