@@ -158,17 +158,12 @@ bool univerzum_valid(struct univerzum* u) {
  * @return True if set is valid
  */
 bool set_valid(struct set* a) {
-    int last_item = -1;
-
     // Loop around all elements inside set
-    for (int i = 0; i < a->size; i++) {
+    for (int i = 1; i < a->size; i++) {
         // If last item is same as current then this set is invalid
-        if (a->nodes[i] == last_item) {
+        if (a->nodes[i] == a->nodes[i - 1]) {
             return false;
         }
-
-        // Update last item
-        last_item = a->nodes[i];
     }
     // If we didn't find two same elements then this set is valid
     return true;
@@ -180,18 +175,13 @@ bool set_valid(struct set* a) {
  * @return True if relation is valid
  */
 bool relation_valid(struct relation* r) {
-    struct relation_node last_item = {.a = -1, .b = -1};
-
     // Loop around all elements inside relation
     for (int i = 0; i < r->size; i++) {
         // If last item is same as current then this relation is invalid
-        if (r->nodes[i].a == last_item.a && r->nodes[i].b == last_item.b) {
+        if (r->nodes[i].a == r->nodes[i - 1].a &&
+            r->nodes[i].b == r->nodes[i - 1].b) {
             return false;
         }
-
-        // Update last item
-        last_item.a = r->nodes[i].a;
-        last_item.b = r->nodes[i].b;
     }
     // If we didn't find two same relation nodes then this set is valid
     return true;
@@ -312,7 +302,8 @@ struct set* set_intersect(struct set* a, struct set* b) {
     int i = 0, k = 0;
     while (i < a->size && k < b->size) {
         if (a->nodes[i] == b->nodes[k]) {
-            intersect->nodes = realloc(intersect->nodes, sizeof(int) * (intersect->size + 1));
+            intersect->nodes =
+                realloc(intersect->nodes, sizeof(int) * (intersect->size + 1));
             intersect->nodes[intersect->size++] = a->nodes[i++];
             k++;
         } else if (a->nodes[i] < b->nodes[k]) {
