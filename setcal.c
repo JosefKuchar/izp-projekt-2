@@ -939,35 +939,7 @@ bool process_set(FILE* fp, struct store* store, bool empty) {
 }
 
 /**
- * @param fp File pointer
- * @param store Store
- * @return True if everything went well
- */
-bool process_command(FILE* fp, struct store* store, bool empty) {
-    // Command can't be empty
-    if (empty) {
-        fprintf(stderr, "Command can't be empty!");
-        return false;
-    }
-
-    int index = store->size;
-
-    // Init command object
-    store->nodes[index].type = COMMAND;
-    // TODO check malloc
-    store->nodes[index].obj = malloc(sizeof(struct command));
-    store->size++;
-
-    // Parse command
-    if (!parse_command(fp, store->nodes[index].obj)) {
-        fprintf(stderr, "Error parsing command\n");
-        return false;
-    }
-
-    return true;
-}
-
-/**
+ * Process relation
  * @param fp File pointer
  * @param store Store
  * @return True if everything went well
@@ -1000,13 +972,75 @@ bool process_relation(FILE* fp, struct store* store, bool empty) {
 }
 
 /**
+ * Process command
+ * @param fp File pointer
+ * @param store Store
+ * @return True if everything went well
+ */
+bool process_command(FILE* fp, struct store* store, bool empty) {
+    // Command can't be empty
+    if (empty) {
+        fprintf(stderr, "Command can't be empty!");
+        return false;
+    }
+
+    int index = store->size;
+
+    // Init command object
+    store->nodes[index].type = COMMAND;
+    // TODO check malloc
+    store->nodes[index].obj = malloc(sizeof(struct command));
+    store->size++;
+
+    // Parse command
+    if (!parse_command(fp, store->nodes[index].obj)) {
+        fprintf(stderr, "Error parsing command\n");
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Process one line
+ * @param fp File pointer
+ * @param c Starting character
+ * @param i Current line index
+ * @param store Store
+ * @return True if line was parsed correctly
+ */
+bool process_line(FILE* fp, char c, int i, struct store* store) {
+    int next = getc(fp);
+
+    // This shouldn't happen with valid file
+    // Ensure that univerzum will be first
+    if ((next == EOF) || (i == 0 && c != 'U')) {
+        return false;
+    }
+
+    bool empty = next == '\n';
+
+    switch (c) {
+        case 'U':
+            return process_univerzum(fp, store, empty);
+        case 'S':
+            return process_set(fp, store, empty);
+        case 'R':
+            return process_relation(fp, store, empty);
+        case 'C':
+            return process_command(fp, store, empty);
+        default:
+            fprintf(stderr, "Invalid starting character!\n");
+            return false;
+    }
+}
+
+/**
  * Process all lines in file
  * @param fp File pointer
  * @return True if everything went well
  */
 bool process_file(FILE* fp) {
-    bool ok = false;
-
     struct store store;
     store.size = 0;
     // Allocate enough memory for store
@@ -1018,61 +1052,28 @@ bool process_file(FILE* fp) {
     }
 
     int c = 0;
-    // Loop around all chars
+    // Loop around all lines
     for (int i = 0; (c = getc(fp)) != EOF; i++) {
-        int next = getc(fp);
-        // This shouldn't happen with valid file
-        // Ensure that univerzum will be first
-        if ((next == EOF) || (i == 0 && c != 'U')) {
-            ok = false;
-            break;
-        }
-
-        bool empty = next == '\n';
-
-        switch (c) {
-            case 'U':
-                ok = process_univerzum(fp, &store, empty);
-                break;
-            case 'S':
-                ok = process_set(fp, &store, empty);
-                break;
-            case 'R':
-                ok = process_relation(fp, &store, empty);
-                break;
-            case 'C':
-                ok = process_command(fp, &store, empty);
-                break;
-            default:
-                fprintf(stderr, "Invalid starting character!\n");
-                ok = false;
-                break;
-        }
-
-        if (!ok) {
-            break;
+        if (!process_line(fp, c, i, &store)) {
+            fprintf(stderr, "Error parsing file!\n");
+            free_store(&store);
+            return false;
         }
     }
-
-    if (!ok) {
-        fprintf(stderr, "Error parsing file!\n");
+    // Check store validity
+    if (!store_valid(&store)) {
+        fprintf(stderr, "Invalid definition of file parts!\n");
+        free_store(&store);
+        return false;
     }
-
-    if (ok) {
-        ok = store_valid(&store);
-        if (!ok) {
-            fprintf(stderr, "Invalid definition of file parts!\n");
-        }
+    // Run store
+    if (!store_runner(&store)) {
+        free_store(&store);
+        return false;
     }
-
-    if (ok) {
-        ok = store_runner(&store);
-    }
-
     // Free store from memory
     free_store(&store);
-
-    return ok;
+    return true;
 }
 
 /*---------------------------- FILE MANIPULATION ----------------------------*/
