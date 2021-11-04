@@ -176,7 +176,7 @@ bool set_valid(struct set* a) {
  */
 bool relation_valid(struct relation* r) {
     // Loop around all elements inside relation
-    for (int i = 0; i < r->size; i++) {
+    for (int i = 1; i < r->size; i++) {
         // If last item is same as current then this relation is invalid
         if (r->nodes[i].a == r->nodes[i - 1].a &&
             r->nodes[i].b == r->nodes[i - 1].b) {
