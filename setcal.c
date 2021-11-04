@@ -842,6 +842,7 @@ bool process_command(FILE* fp,
                      bool empty) {
     // Command can't be empty
     if (empty) {
+        fprintf(stderr, "Command can't be empty!");
         return false;
     }
 
