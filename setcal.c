@@ -389,11 +389,18 @@ bool set_subseteq(struct set* a, struct set* b) {
     return (k == a->size);
 }
 
-/*
-void set_subset(struct set* a, struct set* b) {
-    // TODO
+bool set_subset(struct set* a, struct set* b) {
+    int k = 0;
+    for (int i = 0; i < b->size; i++) {
+        if (k == a->size) {
+            break;
+        }
+        if (b->nodes[i] == a->nodes[k]) {
+            k++;
+        }
+    }
+    return (k == a->size) && (a->size != b->size);
 }
-*/
 
 /**
  * Compare two sets
