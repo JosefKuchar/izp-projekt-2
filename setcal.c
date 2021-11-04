@@ -2,6 +2,7 @@
  * @name IZP Projekt 2 - Prace s datovymi strukturami
  * @author Josef Kuchar - xkucha28
  * @author Martin Hemza - xhemza05
+ * @author Filip Hauzvic - xhauzv00
  * 2021
  */
 
@@ -522,11 +523,41 @@ bool set_equals(struct set* a, struct set* b) {
 
 /*--------------------------- RELATION FUNCTIONS ----------------------------*/
 
-/*
-void relation_reflexive(struct relation* r) {
-    // TODO
+/**
+* Find out if relation is reflexive
+* @param r Relation
+* @param u Univerzum
+* @return True if relation is reflexive
+*/
+bool relation_reflexive(struct relation* r, struct univerzum* u) {
+    bool reflex_for_i;
+
+    // Loop around all universe nodes
+    for(int i = 0; i < u->size; i++){
+        reflex_for_i = false;
+
+        // Loop around all relation nodes
+        for(int j = 0; j < r->size; j++){
+            // Look for relation nodes that have same value as current universe node
+            if(r->nodes[j].a == i){
+                // If node is reflective, move on to next universe node
+                if(r->nodes[j].a == r->nodes[j].b){
+                    reflex_for_i = true;
+                    break;
+                }
+            }
+        }
+
+        // Relation isn't reflexive
+        if(!reflex_for_i){
+            return false;
+        }
+    }
+
+    return true;
 }
 
+/*
 void relation_symmetric(struct relation* r) {
     // TODO
 }
