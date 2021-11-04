@@ -247,6 +247,32 @@ void print_relation(struct relation* r, struct univerzum* u) {
     printf("\n");
 }
 
+/**
+ * Print sotre
+ * @param s Store
+ * @param store_size Store size
+ */
+void print_store(struct store_node* s, int store_size) {
+    // TODO Implement command printing
+    // TODO Implement proper univerzum
+    for (int i = 0; i < store_size; i++) {
+        switch (s[i].type) {
+            case UNIVERZUM:
+                print_univerzum(s[i].obj);
+                break;
+            case SET:
+                print_set(s[i].obj, s[0].obj);
+                break;
+            case RELATION:
+                print_relation(s[i].obj, s[0].obj);
+                break;
+            case COMMAND:
+                // TODO
+                break;
+        }
+    }
+}
+
 /*------------------------------ SET FUNCTIONS ------------------------------*/
 
 void set_empty(struct set* a) {
@@ -483,6 +509,14 @@ void free_relation(struct relation* r) {
 }
 
 /**
+ * Free command struct
+ * @param c Command
+ */
+void free_command(struct command* c) {
+    free(c);
+}
+
+/**
  * Free store from memory including all children
  * @param store Pointer to store
  * @param size Size of store
@@ -499,6 +533,9 @@ void free_store(struct store_node* store, int size) {
                 break;
             case RELATION:
                 free_relation(store[i].obj);
+                break;
+            case COMMAND:
+                free_command(store[i].obj);
                 break;
             default:
                 // TODO: Handle this, it shouldn't happen tho
@@ -545,7 +582,6 @@ bool parse_univerzum(FILE* fp, struct univerzum* u) {
         index++;
     }
 
-    print_univerzum(u);
     return true;
 }
 
@@ -598,7 +634,6 @@ bool parse_set(FILE* fp, struct set* s, struct univerzum* u) {
         node[index] = c;
         index++;
     }
-    print_set(s, u);
     return true;
 }
 
@@ -661,13 +696,28 @@ bool parse_relation(FILE* fp, struct relation* r, struct univerzum* u) {
             break;
         }
     }
-    print_relation(r, u);
     return true;
 }
 
-// bool parse_command(FILE* fp, struct command* c) {
+/**
+ * Parse command
+ * @param fp File pointer
+ * @param c Command
+ * @return True if everything went well
+ */
+bool parse_command(FILE* fp, struct command* c) {
+    // TODO
+    c->type = EMPTY;
 
-// }
+    while (true) {
+        int c = getc(fp);
+        if (c == EOF || c == '\n') {
+            break;
+        }
+    }
+
+    return true;
+}
 
 /**
  * Process univerzum
@@ -676,14 +726,22 @@ bool parse_relation(FILE* fp, struct relation* r, struct univerzum* u) {
  * @param store_size Store size
  * @return True if everything went well
  */
-bool process_univerzum(FILE* fp, struct store_node* store, int* store_size) {
+bool process_univerzum(FILE* fp,
+                       struct store_node* store,
+                       int* store_size,
+                       bool empty) {
     int index = *store_size;
 
     // Init univerzum object
     store[index].type = UNIVERZUM;
     // TODO check malloc
-    store[index].obj = malloc(sizeof(struct univerzum));
+    store[index].obj = calloc(1, sizeof(struct univerzum));
     (*store_size)++;
+
+    // If set is empty, we can return it, it is completely valid
+    if (empty) {
+        return true;
+    }
 
     // Parse univerzum
     if (!parse_univerzum(fp, store[index].obj)) {
@@ -704,14 +762,20 @@ bool process_univerzum(FILE* fp, struct store_node* store, int* store_size) {
 bool process_set(FILE* fp,
                  struct store_node* store,
                  int* store_size,
-                 struct univerzum* u) {
+                 struct univerzum* u,
+                 bool empty) {
     int index = *store_size;
 
     // Init set object
     store[index].type = SET;
     // TODO check malloc
-    store[index].obj = malloc(sizeof(struct set));
+    store[index].obj = calloc(1, sizeof(struct set));
     (*store_size)++;
+
+    // If set is empty, we can return it, it is completely valid
+    if (empty) {
+        return true;
+    }
 
     // Handle parsing
     if (!parse_set(fp, store[index].obj, u)) {
@@ -731,20 +795,28 @@ bool process_set(FILE* fp,
  * @param store_size Store size
  * @return True if everything went well
  */
-// bool process_command(FILE* fp, struct store_node* store, int* store_size) {
-//     int index = *store_size;
+bool process_command(FILE* fp,
+                     struct store_node* store,
+                     int* store_size,
+                     bool empty) {
+    // Command can't be empty
+    if (empty) {
+        return false;
+    }
 
-//     // Init command object
-//     store[index].type = COMMAND;
-//     // TODO check malloc
-//     store[index].obj = malloc(sizeof(struct command));
-//     (*store_size)++;
+    int index = *store_size;
 
-//     // Parse command
-//     parse_command(fp, store[index].obj);
+    // Init command object
+    store[index].type = COMMAND;
+    // TODO check malloc
+    store[index].obj = malloc(sizeof(struct command));
+    (*store_size)++;
 
-//     return true;
-// }
+    // Parse command
+    parse_command(fp, store[index].obj);
+
+    return true;
+}
 
 /**
  * @param fp File pointer
@@ -755,14 +827,20 @@ bool process_set(FILE* fp,
 bool process_relation(FILE* fp,
                       struct store_node* store,
                       int* store_size,
-                      struct univerzum* u) {
+                      struct univerzum* u,
+                      bool empty) {
     int index = *store_size;
 
     // Init relation object
     store[index].type = RELATION;
     // TODO check malloc
-    store[index].obj = malloc(sizeof(struct relation));
+    store[index].obj = calloc(1, sizeof(struct relation));
     (*store_size)++;
+
+    // If relation is empty, we can return it, it is completely valid
+    if (empty) {
+        return true;
+    }
 
     // Parse relation
     if (!parse_relation(fp, store[index].obj, u)) {
@@ -795,23 +873,29 @@ bool process_file(FILE* fp) {
     int c = 0;
     // Loop around all chars
     while ((c = getc(fp)) != EOF) {
-        // FIXME for blank things (univerzum for example)
-        getc(fp);
+        int next = getc(fp);
+
+        if (next == EOF) {
+            break;
+        }
+
+        bool empty = next == '\n';
 
         switch (c) {
             case 'U':
-                ok = process_univerzum(fp, store, &store_size);
+                ok = process_univerzum(fp, store, &store_size, empty);
                 break;
             case 'S':
                 // TODO check if univerzum is at 0
-                ok = process_set(fp, store, &store_size, store[0].obj);
+                ok = process_set(fp, store, &store_size, store[0].obj, empty);
                 break;
             case 'R':
                 // TODO check if univerzum is at 0
-                ok = process_relation(fp, store, &store_size, store[0].obj);
+                ok = process_relation(fp, store, &store_size, store[0].obj,
+                                      empty);
                 break;
             case 'C':
-                // ok = process_command(fp, store, &store_size);
+                ok = process_command(fp, store, &store_size, empty);
                 break;
             default:
                 // TODO handle other characters
@@ -821,6 +905,10 @@ bool process_file(FILE* fp) {
         if (!ok) {
             break;
         }
+    }
+
+    if (ok) {
+        print_store(store, store_size);
     }
 
     // Free store from memory
