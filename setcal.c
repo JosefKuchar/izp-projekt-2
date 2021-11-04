@@ -225,7 +225,7 @@ bool store_valid(struct store* store) {
             }
             // Sets or relations can be only after univerzum or each other
         } else if (type == SET || type == RELATION) {
-            if (c_found) {
+            if (c_found || !u_found) {
                 return false;
             }
             s_or_r_found = true;
