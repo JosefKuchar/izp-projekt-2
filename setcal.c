@@ -554,11 +554,21 @@ bool relation_reflexive(struct relation* r, struct univerzum* u) {
     return true;
 }
 
-/*
-void relation_symmetric(struct relation* r) {
-    // TODO
+bool relation_symmetric(struct relation* r) {
+    for (int i = 0; i < r->size; i++) {
+        for (int k = 0; k < r->size; k++) {
+            if (r->nodes[i].a == r->nodes[k].b && r->nodes[i].b == r->nodes[k].a) {
+                break;
+            }
+            if (k + 1 == r->size) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
+/*
 void relation_antisymmetric(struct relation* r) {
     // TODO
 }
