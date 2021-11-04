@@ -5,19 +5,27 @@
  * 2021
  */
 
+/*-------------------------------- LIBRARIES --------------------------------*/
+
 #include <ctype.h>    // Char functions
 #include <stdbool.h>  // Bool type
 #include <stdio.h>    // IO functions
 #include <stdlib.h>   // EXIT macros
 #include <string.h>   // String manipulation functions
 
+/*-------------------------------- CONSTANTS --------------------------------*/
+
 // Define string length hard limits
 #define MAX_STRING_LENGTH 30
 #define STRING_BUFFER_SIZE MAX_STRING_LENGTH + 1  // +1 is for \0
 
+/*---------------------------------- ENUMS ----------------------------------*/
+
 enum store_node_type { UNIVERZUM, SET, RELATION, COMMAND };
 
 enum command_type { EMPTY };
+
+/*--------------------------------- STRUCTS ---------------------------------*/
 
 // Struct to keep track of univerzum
 struct univerzum {
@@ -57,17 +65,7 @@ struct store_node {
     void* obj;                  // Pointer to node
 };
 
-/**
- * Print bool value
- * @param b bool to be printed
- */
-void print_bool(bool b) {
-    if (b) {
-        printf("true\n");
-    } else {
-        printf("false\n");
-    }
-}
+/*--------------------------------- SORTING ---------------------------------*/
 
 /**
  * Function to compare two numbers - for qsort
@@ -114,6 +112,8 @@ void set_sort(struct set* s) {
 void relation_sort(struct relation* r) {
     qsort(r->nodes, r->size, sizeof(struct relation_node), compare_rel_nodes);
 }
+
+/*------------------------------- VALIDATIONS -------------------------------*/
 
 /**
  * Check if univerzum is valid (doesn't contain reserved words, same words)
@@ -186,6 +186,20 @@ bool relation_valid(struct relation* r) {
     return true;
 }
 
+/*----------------------------- PRINT FUNCTIONS -----------------------------*/
+
+/**
+ * Print bool value
+ * @param b bool to be printed
+ */
+void print_bool(bool b) {
+    if (b) {
+        printf("true\n");
+    } else {
+        printf("false\n");
+    }
+}
+
 /**
  * Print univerzum
  * @param u Univerzum
@@ -232,6 +246,8 @@ void print_relation(struct relation* r, struct univerzum* u) {
     }
     printf("\n");
 }
+
+/*------------------------------ SET FUNCTIONS ------------------------------*/
 
 void set_empty(struct set* a) {
     print_bool(a->size == 0);
@@ -392,6 +408,9 @@ bool set_equals(struct set* a, struct set* b) {
 
     return true;
 }
+
+/*--------------------------- RELATION FUNCTIONS ----------------------------*/
+
 /*
 void relation_reflexive(struct relation* r) {
     // TODO
@@ -433,6 +452,8 @@ void relation_bijective(struct relation* r) {
     // TODO
 }
 */
+
+/*------------------------ MEMORY FREEING FUNCTIONS -------------------------*/
 
 /**
  * Free univerzum struct
@@ -488,6 +509,8 @@ void free_store(struct store_node* store, int size) {
     // Free store itself
     free(store);
 }
+
+/*------------------------------- FILE PARSING ------------------------------*/
 
 /**
  * Parse univerzum from file stream
@@ -806,6 +829,8 @@ bool process_file(FILE* fp) {
     return ok;
 }
 
+/*---------------------------- FILE MANIPULATION ----------------------------*/
+
 /**
  * Open file
  * @param filename File name
@@ -837,6 +862,8 @@ bool close_file(FILE* fp) {
     }
 }
 
+/*------------------------ PROGRAM ARGUMENT FUNCTONS ------------------------*/
+
 /**
  * Check number of arguments
  * @param argc Number of arguments
@@ -850,6 +877,8 @@ bool check_arguments(int argc) {
         return true;
     }
 }
+
+/*---------------------------------- ENTRY ----------------------------------*/
 
 int main(int argc, char* argv[]) {
     // Check number of arguments
