@@ -274,11 +274,33 @@ struct set* set_complement(struct set* a, struct univerzum* u) {
     }
     return complement;
 }
-/*
 
-void set_union(struct set* a, struct set* b) {
-    // TODO
+struct set* set_union(struct set* a, struct set* b) {
+    // Allocate memory union set
+    struct set* s_union = malloc(sizeof(struct set));
+    s_union->nodes = malloc(sizeof(int));
+    s_union->size = 0;
+
+    int i = 0, k = 0;
+    while (i < a->size || k < b->size) {
+        s_union->nodes = realloc(s_union->nodes, sizeof(int) * (s_union->size + 1));
+        if (i > a->size) {
+            s_union->nodes[s_union->size] = b->nodes[k++];
+        } else if (k > b->size) {
+            s_union->nodes[s_union->size] = a->nodes[i++];
+        } else if (a->nodes[i] < b->nodes[k]) {
+            s_union->nodes[s_union->size] = a->nodes[i++];
+        } else if (a->nodes[i] == b->nodes[k]) {
+            s_union->nodes[s_union->size] = a->nodes[i++];
+            k++;
+        } else {
+            s_union->nodes[s_union->size] = b->nodes[k++];
+        }
+        s_union->size++;
+    }
+    return s_union;
 }
+/*
 
 void set_intersect(struct set* a, struct set* b) {
     // TODO
