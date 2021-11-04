@@ -474,7 +474,7 @@ void free_set(struct set* s) {
 }
 
 /**
- * Free relatino struct
+ * Free relation struct
  * @param r Relation
  */
 void free_relation(struct relation* r) {
