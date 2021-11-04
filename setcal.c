@@ -245,6 +245,12 @@ void set_card(struct set* a) {
     printf("%d\n", a->size);
 }
 
+/**
+ * Set complement function
+ * @param a Set - sorted
+ * @param u Univerzum
+ * @return Pointer to new set
+ */
 struct set* set_complement(struct set* a, struct univerzum* u) {
     // Allocate memory complement set
     struct set* complement = malloc(sizeof(struct set));
@@ -265,6 +271,12 @@ struct set* set_complement(struct set* a, struct univerzum* u) {
     return complement;
 }
 
+/**
+ * Set union function
+ * @param a First set - sorted
+ * @param b Second set - sorted
+ * @return Pointer to new set
+ */
 struct set* set_union(struct set* a, struct set* b) {
     // Allocate memory union set
     struct set* s_union = malloc(sizeof(struct set));
@@ -292,6 +304,12 @@ struct set* set_union(struct set* a, struct set* b) {
     return s_union;
 }
 
+/**
+ * Set intersect function
+ * @param a Set - sorted
+ * @param b Set - sorted
+ * @return Pointer to new set
+ */
 struct set* set_intersect(struct set* a, struct set* b) {
     // TODO
     struct set* intersect = malloc(sizeof(struct set));
@@ -314,6 +332,12 @@ struct set* set_intersect(struct set* a, struct set* b) {
     return intersect;
 }
 
+/**
+ * Set minus function
+ * @param a Set - sorted
+ * @param b Set - sorted
+ * @return Pointer to new set
+ */
 struct set* set_minus(struct set* a, struct set* b) {
     // Allocate memory minus set
     struct set* minus = malloc(sizeof(struct set));
@@ -323,7 +347,8 @@ struct set* set_minus(struct set* a, struct set* b) {
     int i = 0, k = 0;
     while (i < a->size) {
         if (k > b->size || a->nodes[i] < b->nodes[k]) {
-            minus->nodes = realloc(minus->nodes, sizeof(int) * (minus->size + 1));
+            minus->nodes =
+                realloc(minus->nodes, sizeof(int) * (minus->size + 1));
             minus->nodes[minus->size++] = a->nodes[i++];
         } else if (a->nodes[i] == b->nodes[k]) {
             i++;
