@@ -196,6 +196,45 @@ bool relation_valid(struct relation* r) {
     return true;
 }
 
+/**
+ * Check if store is valid (correct order of node types)
+ * @param store Store
+ * @param store_size Store size
+ * @return True if store is valid
+ */
+bool store_valid(struct store_node* store, int store_size) {
+    // Empty store isn't correct
+    if (store_size == 0) {
+        return false;
+    }
+    // Ensure good order of node types
+    bool u_found = false, s_or_r_found = false, c_found = false;
+    for (int i = 0; i < store_size; i++) {
+        // Univerzum can only one and it has to be first element
+        if (store[i].type == UNIVERZUM) {
+            if (i == 0) {
+                u_found = true;
+            } else {
+                return false;
+            }
+            // Sets or relations can be only after univerzum or each other
+        } else if (store[i].type == SET || store[i].type == RELATION) {
+            if (c_found) {
+                return false;
+            }
+            s_or_r_found = true;
+            // Commands can only be after set or relation or command
+        } else if (store[i].type == COMMAND) {
+            if (!s_or_r_found) {
+                return false;
+            }
+            c_found = true;
+        }
+    }
+    // Ensure all types of nodes are present
+    return u_found && s_or_r_found && c_found;
+}
+
 /*----------------------------- PRINT FUNCTIONS -----------------------------*/
 
 /**
@@ -1033,7 +1072,14 @@ bool process_file(FILE* fp) {
     }
 
     if (ok) {
-        store_runner(store, store_size);
+        ok = store_valid(store, store_size);
+        if (!ok) {
+            fprintf(stderr, "Invalid definition of file parts!\n");
+        }
+    }
+
+    if (ok) {
+        ok = store_runner(store, store_size);
     }
 
     // Free store from memory
