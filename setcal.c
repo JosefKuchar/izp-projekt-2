@@ -277,6 +277,7 @@ void print_store(struct store_node* s, int store_size) {
                 break;
             case COMMAND:
                 // TODO
+                printf("COMMAND\n");
                 break;
         }
     }
@@ -284,8 +285,13 @@ void print_store(struct store_node* s, int store_size) {
 
 /*------------------------------ SET FUNCTIONS ------------------------------*/
 
-void set_empty(struct set* a) {
-    print_bool(a->size == 0);
+/**
+ * Set empty function
+ * @param a Set
+ * @return True if set is empty
+ */
+bool set_empty(struct set* a) {
+    return a->size == 0;
 }
 
 /**
@@ -514,6 +520,20 @@ void relation_surjective(struct relation* r) {
 void relation_bijective(struct relation* r) {
     // TODO
 }
+
+void relation_closure_ref() {
+    // TODO
+}
+
+void relation_closure_sym() {
+    // TODO
+}
+
+void relation_trans_sym() {
+    //TODO
+}
+
+
 */
 
 /*------------------------ MEMORY FREEING FUNCTIONS -------------------------*/
@@ -574,9 +594,6 @@ void free_store(struct store_node* store, int size) {
             case COMMAND:
                 free_command(store[i].obj);
                 break;
-            default:
-                // TODO: Handle this, it shouldn't happen tho
-                break;
         }
     }
 
@@ -616,7 +633,7 @@ bool parse_univerzum(FILE* fp, struct univerzum* u) {
             fprintf(stderr, "Invalid character in universum\n");
             return false;
         }
-
+        // TODO handle overflow
         u->nodes[u->size - 1][index] = c;
         index++;
     }
@@ -634,7 +651,7 @@ bool parse_set(FILE* fp, struct set* s, struct univerzum* u) {
     // Allocate memory for one node
     s->nodes = malloc(sizeof(int));
     s->size = 0;
-
+    // TODO handle overflow
     char node[STRING_BUFFER_SIZE] = {0};
     int index = 0;
 
@@ -687,7 +704,7 @@ bool parse_relation(FILE* fp, struct relation* r, struct univerzum* u) {
     // Allocate memory for one node
     r->nodes = malloc(sizeof(struct relation_node));
     r->size = 0;
-
+    // TODO handle overflow
     char node[STRING_BUFFER_SIZE] = {0};
     int index = 0;
 
