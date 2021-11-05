@@ -666,11 +666,17 @@ bool relation_injective(struct relation* r) {
     return true;
 }
 
-/*
-void relation_surjective(struct relation* r) {
+bool relation_surjective(struct relation* r) {
     // TODO
+    for (int i = 1; i < r->size; i++) {
+        if (r->nodes[i].a == r->nodes[i - 1].a) {
+            return false;
+        }
+    }
+    return true;
 }
 
+/*
 void relation_bijective(struct relation* r) {
     // TODO
 }
