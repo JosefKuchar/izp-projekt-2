@@ -825,6 +825,7 @@ void run_command(struct command* command, struct store* store) {
         case OUT_SET:;
             struct set* set = result;
             print_set(set, store->nodes[0].obj);
+            free_set(set);
             break;
         default:
             printf("This output is not implemented yet!\n");
