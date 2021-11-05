@@ -643,10 +643,17 @@ struct set* relation_domain(struct relation* r) {
     return domain;
 }
 
-struct set* relation_codomain(struct relation* r) {
+bool relation_codomain(struct relation* r, struct set** result) {
     // TODO too ugly -> make better
-    struct set* codomain = malloc(sizeof(struct set));
+    *result = malloc(sizeof(struct set));
+    if(*result == NULL){
+        return false;
+    }
+    struct set* codomain = *result;
     codomain->nodes = malloc(sizeof(int));
+    if(codomain->nodes = NULL){
+        return false;
+    }
     codomain->size = 0;
 
     int last = -1;
@@ -667,37 +674,49 @@ struct set* relation_codomain(struct relation* r) {
         last = min;
         codomain->nodes =
             realloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
+            if(codomain->nodes == NULL){
+                return false;
+            }
         codomain->nodes[codomain->size++] = min;
         if (min == max) {
             break;
         }
     }
-    return codomain;
+    return true;
 }
 
-bool relation_injective(struct relation* r) {
+bool relation_injective(struct relation* r, bool* result) {
     for (int i = 0; i < r->size; i++) {
         for (int j = i + 1; j < r->size; j++) {
             if ((r->nodes[i].a == r->nodes[j].a) ||
                 (r->nodes[i].b == r->nodes[j].b)) {
-                return false;
+                *result = true;
+                return true;
             }
         }
     }
+    *result = false;
     return true;
 }
 
-bool relation_surjective(struct relation* r) {
+bool relation_surjective(struct relation* r, bool* result) {
     for (int i = 1; i < r->size; i++) {
         if (r->nodes[i].a == r->nodes[i - 1].a) {
-            return false;
+            *result = false;
+            return true;
         }
     }
+    *result = true;
     return true;
 }
 
-bool relation_bijective(struct relation* r) {
-    return relation_injective(r) && relation_surjective(r);
+bool relation_bijective(struct relation* r, bool* result) {
+    bool temp1, temp2;
+    if(!relation_injective(r, &temp1) || !relation_surjective(r, &temp2)){
+        return false;
+    }
+    *result = temp1 && temp2;
+    return true;
 }
 
 /**
