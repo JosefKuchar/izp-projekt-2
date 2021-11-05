@@ -23,15 +23,15 @@
 
 /*---------------------------------- ENUMS ----------------------------------*/
 
-enum store_node_type { UNIVERZUM, SET, RELATION, COMMAND };
+enum store_node_type { UNIVERSE, SET, RELATION, COMMAND };
 
 enum command_type { EMPTY };
 
 /*--------------------------------- STRUCTS ---------------------------------*/
 
-// Struct to keep track of univerzum
-struct univerzum {
-    int size;                           // Univerzum size
+// Struct to keep track of universe
+struct universe {
+    int size;                           // Universe size
     char (*nodes)[STRING_BUFFER_SIZE];  // Array of strings
 };
 
@@ -124,12 +124,12 @@ void relation_sort(struct relation* r) {
 /*------------------------------- VALIDATIONS -------------------------------*/
 
 /**
- * Check if univerzum is valid (doesn't contain reserved words, same words)
- * @param u Univerzum
- * @return True if univerzum is valid
+ * Check if universe is valid (doesn't contain reserved words, same words)
+ * @param u Universe
+ * @return True if universe is valid
  */
-bool univerzum_valid(struct univerzum* u) {
-    // Define all illegal words inside univerzum
+bool universe_valid(struct universe* u) {
+    // Define all illegal words inside universe
     const char* illegal[] = {"empty",       "card",
                              "complement",  "union",
                              "intersect",   "minus",
@@ -145,24 +145,24 @@ bool univerzum_valid(struct univerzum* u) {
                              "false",       ""};
     int size = sizeof(illegal) / sizeof(illegal[0]);
 
-    // Loop around all elements inside univerzum
+    // Loop around all elements inside universe
     for (int i = 0; i < u->size; i++) {
         // Loop around all illegal words
         for (int j = 0; j < size; j++) {
             if (strcmp(u->nodes[i], illegal[j]) == 0) {
-                fprintf(stderr, "Illegal word inside univerzum!\n");
+                fprintf(stderr, "Illegal word inside universe!\n");
                 return false;
             }
         }
         // Check for repeated word
         for (int j = i + 1; j < u->size; j++) {
             if (strcmp(u->nodes[i], u->nodes[j]) == 0) {
-                fprintf(stderr, "Repeated word inside univerzum!\n");
+                fprintf(stderr, "Repeated word inside universe!\n");
                 return false;
             }
         }
     }
-    // Univerzum is valid if everything went well
+    // Universe is valid if everything went well
     return true;
 }
 
@@ -213,14 +213,14 @@ bool store_valid(struct store* store) {
     bool u_found = false, s_or_r_found = false, c_found = false;
     for (int i = 0; i < store->size; i++) {
         enum store_node_type type = store->nodes[i].type;
-        // Univerzum can only be one and it has to be first element
-        if (type == UNIVERZUM) {
+        // Universe can only be one and it has to be first element
+        if (type == UNIVERSE) {
             if (i == 0) {
                 u_found = true;
             } else {
                 return false;
             }
-            // Sets or relations can be only after univerzum or each other
+            // Sets or relations can be only after universe or each other
         } else if (type == SET || type == RELATION) {
             if (c_found || !u_found) {
                 return false;
@@ -253,15 +253,15 @@ void print_bool(bool b) {
 }
 
 /**
- * Print univerzum
- * @param u Univerzum
+ * Print universe
+ * @param u Universe
  */
-void print_univerzum(struct univerzum* u) {
-    // Indicate we are printing univerzum
+void print_universe(struct universe* u) {
+    // Indicate we are printing universe
     printf("U");
-    // Loop around all nodes inside univerzum
+    // Loop around all nodes inside universe
     for (int i = 0; i < u->size; i++) {
-        // Print each node inside univerzum
+        // Print each node inside universe
         printf(" %s", u->nodes[i]);
     }
     printf("\n");
@@ -270,9 +270,9 @@ void print_univerzum(struct univerzum* u) {
 /**
  * Print set
  * @param a Set
- * @param u Univerzum
+ * @param u Universe
  */
-void print_set(struct set* a, struct univerzum* u) {
+void print_set(struct set* a, struct universe* u) {
     // Indicate we are printing set
     printf("S");
     // Loop around all nodes inside set
@@ -286,9 +286,9 @@ void print_set(struct set* a, struct univerzum* u) {
 /**
  * Print relation
  * @param r Relation
- * @param u Univerzum
+ * @param u Universe
  */
-void print_relation(struct relation* r, struct univerzum* u) {
+void print_relation(struct relation* r, struct universe* u) {
     // Indicate we are printing relation
     printf("R");
     // Loop around all nodes inside relation
@@ -306,8 +306,8 @@ void print_relation(struct relation* r, struct univerzum* u) {
 void print_store(struct store* s) {
     for (int i = 0; i < s->size; i++) {
         switch (s->nodes[i].type) {
-            case UNIVERZUM:
-                print_univerzum(s->nodes[i].obj);
+            case UNIVERSE:
+                print_universe(s->nodes[i].obj);
                 break;
             case SET:
                 print_set(s->nodes[i].obj, s->nodes[0].obj);
@@ -345,10 +345,10 @@ void set_card(struct set* a) {
 /**
  * Set complement function
  * @param a Set - sorted
- * @param u Univerzum
+ * @param u Universe
  * @return Pointer to new set
  */
-struct set* set_complement(struct set* a, struct univerzum* u) {
+struct set* set_complement(struct set* a, struct universe* u) {
     // Allocate memory complement set
     struct set* complement = malloc(sizeof(struct set));
     complement->nodes = malloc((u->size * sizeof(int) - sizeof(a->nodes)));
@@ -522,10 +522,10 @@ bool set_equals(struct set* a, struct set* b) {
 /**
  * Find out if relation is reflexive
  * @param r Relation
- * @param u Univerzum
+ * @param u Universe
  * @return True if relation is reflexive
  */
-bool relation_reflexive(struct relation* r, struct univerzum* u) {
+bool relation_reflexive(struct relation* r, struct universe* u) {
     bool reflex_for_i;
 
     // Loop around all universe nodes
@@ -610,7 +610,7 @@ bool relation_function(struct relation* r) {
     return true;
 }
 
-void relation_domain(struct relation* r, struct univerzum* u) {
+void relation_domain(struct relation* r, struct universe* u) {
     printf("%s", u->nodes[r->nodes[0].a]);
     for (int i = 1; i < r->size; i++) {
         if (r->nodes[i].a != r->nodes[i - 1].a)
@@ -618,7 +618,7 @@ void relation_domain(struct relation* r, struct univerzum* u) {
     }
 }
 
-void relation_codomain(struct relation* r, struct univerzum* u) {
+void relation_codomain(struct relation* r, struct universe* u) {
     //TODO too ugly -> make better
     int last = -1;
     int max = -1;
@@ -643,19 +643,11 @@ void relation_codomain(struct relation* r, struct univerzum* u) {
     }
 }
 
-bool relation_injective(struct relation* r) {
+/*
+void relation_injective(struct relation* r) {
     // TODO
-    for (int i = 0; i < r->size; i++) {
-        for (int j = i + 1; j < r->size; j++) {
-            if ((r->nodes[i].a == r->nodes[j].a) || (r->nodes[i].b == r->nodes[j].b)) {
-                return false;
-            }
-        }
-    }
-    return true;
 }
 
-/*
 void relation_surjective(struct relation* r) {
     // TODO
 }
@@ -682,10 +674,10 @@ void relation_trans_sym() {
 /*------------------------ MEMORY FREEING FUNCTIONS -------------------------*/
 
 /**
- * Free univerzum struct
- * @param u Univerzum
+ * Free universe struct
+ * @param u Universe
  */
-void free_univerzum(struct univerzum* u) {
+void free_universe(struct universe* u) {
     free(u->nodes);
     free(u);
 }
@@ -724,8 +716,8 @@ void free_store(struct store* store) {
     // Free all store nodes based on their type
     for (int i = 0; i < store->size; i++) {
         switch (store->nodes[i].type) {
-            case UNIVERZUM:
-                free_univerzum(store->nodes[i].obj);
+            case UNIVERSE:
+                free_universe(store->nodes[i].obj);
                 break;
             case SET:
                 free_set(store->nodes[i].obj);
@@ -753,8 +745,8 @@ void free_store(struct store* store) {
 bool store_runner(struct store* store) {
     for (int i = 0; i < store->size; i++) {
         switch (store->nodes[i].type) {
-            case UNIVERZUM:
-                print_univerzum(store->nodes[i].obj);
+            case UNIVERSE:
+                print_universe(store->nodes[i].obj);
                 break;
             case SET:
                 print_set(store->nodes[i].obj, store->nodes[0].obj);
@@ -804,12 +796,12 @@ bool parse_line_number(char* string, int* result) {
 }
 
 /**
- * Parse univerzum from file stream
+ * Parse universe from file stream
  * @param fp File pointer
- * @param u Univerzum
+ * @param u Universe
  * @return True if everything went well
  */
-bool parse_univerzum(FILE* fp, struct univerzum* u) {
+bool parse_universe(FILE* fp, struct universe* u) {
     // Allocate memory for 1 node
     u->nodes = calloc(sizeof(u->nodes), 1);
     u->size = 1;
@@ -844,10 +836,10 @@ bool parse_univerzum(FILE* fp, struct univerzum* u) {
 /**
  * Parse set from file stream
  * @param fp File pointer
- * @param u Univerzum
+ * @param u Universe
  * @return True if everything went well
  * */
-bool parse_set(FILE* fp, struct set* s, struct univerzum* u) {
+bool parse_set(FILE* fp, struct set* s, struct universe* u) {
     // Allocate memory for one node
     s->nodes = malloc(sizeof(int));
     s->size = 0;
@@ -865,7 +857,7 @@ bool parse_set(FILE* fp, struct set* s, struct univerzum* u) {
             // Allocate memory for next node
             s->nodes = realloc(s->nodes, sizeof(int) * s->size + 1);
 
-            // Compares set node to univerzum node
+            // Compares set node to universe node
             int max = u->size;
             for (int i = 0; i < max; i++) {
                 if (!(strcmp(node, u->nodes[i]))) {
@@ -873,9 +865,9 @@ bool parse_set(FILE* fp, struct set* s, struct univerzum* u) {
                     break;
                 }
                 // If the iteration is the last one => set node wasn't found in
-                // univerzum
+                // universe
                 if (i == max - 1) {
-                    fprintf(stderr, "S Set node is not in univerzum.\n");
+                    fprintf(stderr, "S Set node is not in universe.\n");
                     return false;
                 }
             }
@@ -897,10 +889,10 @@ bool parse_set(FILE* fp, struct set* s, struct univerzum* u) {
  * Parse relation from file stream
  * @param fp File pointer
  * @param r Relation
- * @param u Univerzum
+ * @param u Universe
  * @return True if everything went well
  * */
-bool parse_relation(FILE* fp, struct relation* r, struct univerzum* u) {
+bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
     // Allocate memory for one node
     r->nodes = malloc(sizeof(struct relation_node));
     r->size = 0;
@@ -918,7 +910,7 @@ bool parse_relation(FILE* fp, struct relation* r, struct univerzum* u) {
                     node[index] = '\0';
                     index = 0;
 
-                    // Compares relation node to univerzum node
+                    // Compares relation node to universe node
                     int max = u->size;
                     for (int i = 0; i < max; i++) {
                         if (!(strcmp(node, u->nodes[i]))) {
@@ -930,10 +922,10 @@ bool parse_relation(FILE* fp, struct relation* r, struct univerzum* u) {
                             break;
                         }
                         // If the iteration is the last one => relation node
-                        // wasn't found in univerzum
+                        // wasn't found in universe
                         if (i == max - 1) {
                             fprintf(stderr,
-                                    "S Relation node is not in univerzum.\n");
+                                    "S Relation node is not in universe.\n");
                             return false;
                         }
                     }
@@ -976,18 +968,18 @@ bool parse_command(FILE* fp, struct command* c) {
 }
 
 /**
- * Process univerzum
+ * Process universe
  * @param fp File pointer
  * @param store Store
  * @return True if everything went well
  */
-bool process_univerzum(FILE* fp, struct store* store, bool empty) {
+bool process_universe(FILE* fp, struct store* store, bool empty) {
     int index = store->size;
 
-    // Init univerzum object
-    store->nodes[index].type = UNIVERZUM;
+    // Init universe object
+    store->nodes[index].type = UNIVERSE;
     // TODO check malloc
-    store->nodes[index].obj = calloc(1, sizeof(struct univerzum));
+    store->nodes[index].obj = calloc(1, sizeof(struct universe));
     store->size++;
 
     // If set is empty, we can return it, it is completely valid
@@ -995,14 +987,14 @@ bool process_univerzum(FILE* fp, struct store* store, bool empty) {
         return true;
     }
 
-    // Parse univerzum
-    if (!parse_univerzum(fp, store->nodes[index].obj)) {
-        fprintf(stderr, "Error parsing univerzum!\n");
+    // Parse universe
+    if (!parse_universe(fp, store->nodes[index].obj)) {
+        fprintf(stderr, "Error parsing universe!\n");
         return false;
     }
 
-    // Check if univerzum is valid
-    return univerzum_valid(store->nodes[index].obj);
+    // Check if universe is valid
+    return universe_valid(store->nodes[index].obj);
 }
 
 /**
@@ -1113,14 +1105,14 @@ bool process_line(FILE* fp, char c, struct store* store) {
     bool empty = next == '\n';
 
     // This shouldn't happen with valid file
-    // Ensure that univerzum will be first
+    // Ensure that universe will be first
     if ((next != ' ' && !empty) || (store->size == 0 && c != 'U')) {
         return false;
     }
 
     switch (c) {
         case 'U':
-            return process_univerzum(fp, store, empty);
+            return process_universe(fp, store, empty);
         case 'S':
             return process_set(fp, store, empty);
         case 'R':
