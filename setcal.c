@@ -704,7 +704,7 @@ bool relation_bijective(struct relation* r) {
  * Create reflexive relation closure
  * @param r Relation - sorted
  * @param u Universe - soted
- * @param result Relation - reflexive close will be stored here
+ * @param result Relation - reflexive closure will be stored here
  * @return True if function executed correctly
  */
 bool relation_closure_ref(struct relation* r,
@@ -712,7 +712,7 @@ bool relation_closure_ref(struct relation* r,
                           struct relation** result) {
     // Allocate memory for result relation, which is a copy of original
     *result = malloc(sizeof(struct relation));
-    if (result == NULL) {
+    if (*result == NULL) {
         return false;
     }
     struct relation* closure = *result;
@@ -760,11 +760,55 @@ bool relation_closure_ref(struct relation* r,
     return true;
 }
 
-/*
-void relation_closure_sym() {
-    // TODO
+/**
+ * Create symetric relation closure
+ * @param r Relation - sorted
+ * @param u Universe - soted
+ * @param result Relation - symetric closure will be stored here
+ * @return True if function executed correctly
+ */
+bool relation_closure_sym(struct relation* r, struct relation** result) {
+    // Create a copy of original relation where additional nodes can be added
+    *result = malloc(sizeof(struct relation));
+    if(*result == NULL){
+        return false;
+    }
+
+    struct relation* closure = *result;
+    closure->nodes = malloc(sizeof(struct relation_node) * r->size);
+    if(closure->nodes == NULL){
+        return false;
+    }
+    closure->size = r->size;
+
+    for(int i = 0; i < closure->size; i++){
+        closure->nodes[i] = r->nodes[i];
+    }
+
+    for (int i = 0; i < r->size; i++) {
+        for (int k = 0; k < r->size; k++) {
+            if (r->nodes[i].a == r->nodes[k].b &&
+                r->nodes[i].b == r->nodes[k].a) {
+                break;
+            }
+            // If relation is missing node to be symetric, add that node
+            if (k + 1 == r->size) {
+                closure->size += 1;
+                closure->nodes = realloc(closure->nodes, sizeof(struct relation_node) * closure->size);
+                if(closure->nodes == NULL){
+                    return false;
+                }
+                closure->nodes[closure->size - 1].a = r->nodes[i].b;
+                closure->nodes[closure->size - 1].b = r->nodes[i].a;
+            }
+        }
+    }
+    relation_sort(closure);
+
+    return true;
 }
 
+/*
 void relation_trans_sym() {
     //TODO
 }
