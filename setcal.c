@@ -21,11 +21,16 @@
 #define MAX_STRING_LENGTH 30
 #define STRING_BUFFER_SIZE MAX_STRING_LENGTH + 1  // +1 is for \0
 
+// Define maximum command arguments
+#define MAX_COMMAND_ARGUMENTS 3
+
 /*---------------------------------- ENUMS ----------------------------------*/
 
 enum store_node_type { UNIVERSE, SET, RELATION, COMMAND };
 
-enum command_type { EMPTY };
+enum function_input { IN_SET, IN_SET_SET, IN_SET_UNIVERZUM, IN_RELATION };
+
+enum function_output { OUT_VOID, OUT_BOOL, OUT_SET, OUT_RELATION };
 
 /*--------------------------------- STRUCTS ---------------------------------*/
 
@@ -55,10 +60,17 @@ struct relation {
 
 // Struct to keep track of one command
 struct command {
-    enum command_type type;  // Command type
-    int a;                   // First operand (set or relation)
-    int b;                   // Second operand
-    int n;                   // Line number for bonus
+    int type;                         // Command type
+    int args[MAX_COMMAND_ARGUMENTS];  // Command arguments
+    int argc;                         // Argument count
+};
+
+// Struct to keep track of one command definition
+struct command_def {
+    char name[STRING_BUFFER_SIZE];  // Command string
+    void* function;                 // Command implementation
+    enum function_input input;      // Function input
+    enum function_output output;    // Function output
 };
 
 // Struct to keep track of one node inside relation
@@ -543,7 +555,8 @@ bool relation_reflexive(struct relation* r, struct universe* u) {
                     break;
                 }
                 // Relation is sorted (ascending), we won't find a match again
-                // if the first relation node element is larger than current universe node
+                // if the first relation node element is larger than current
+                // universe node
             } else if (r->nodes[j].a > i) {
                 break;
             }
@@ -561,7 +574,8 @@ bool relation_reflexive(struct relation* r, struct universe* u) {
 bool relation_symmetric(struct relation* r) {
     for (int i = 0; i < r->size; i++) {
         for (int k = 0; k < r->size; k++) {
-            if (r->nodes[i].a == r->nodes[k].b && r->nodes[i].b == r->nodes[k].a) {
+            if (r->nodes[i].a == r->nodes[k].b &&
+                r->nodes[i].b == r->nodes[k].a) {
                 break;
             }
             if (k + 1 == r->size) {
@@ -575,7 +589,8 @@ bool relation_symmetric(struct relation* r) {
 bool relation_antisymmetric(struct relation* r) {
     for (int i = 0; i < r->size; i++) {
         for (int k = i + 1; k < r->size; k++) {
-            if (r->nodes[i].a == r->nodes[k].b && r->nodes[i].b == r->nodes[k].a) {
+            if (r->nodes[i].a == r->nodes[k].b &&
+                r->nodes[i].b == r->nodes[k].a) {
                 return false;
             }
         }
@@ -588,7 +603,8 @@ bool relation_transitive(struct relation* r) {
         for (int j = 0; j < r->size; j++) {
             if (r->nodes[i].b == r->nodes[j].a) {
                 for (int k = 0; k < r->size; k++) {
-                    if (r->nodes[i].a == r->nodes[k].a && r->nodes[j].b == r->nodes[k].b) {
+                    if (r->nodes[i].a == r->nodes[k].a &&
+                        r->nodes[j].b == r->nodes[k].b) {
                         break;
                     }
                     if (k + 1 == r->size) {
@@ -617,7 +633,8 @@ struct set* relation_domain(struct relation* r) {
     domain->nodes[domain->size++] = r->nodes[0].a;
     for (int i = 1; i < r->size; i++) {
         if (r->nodes[i].a != r->nodes[i - 1].a) {
-            realloc(domain->nodes, sizeof(int) * (domain->size + 1));
+            domain->nodes =
+                realloc(domain->nodes, sizeof(int) * (domain->size + 1));
             domain->nodes[domain->size++] = r->nodes[i].a;
         }
     }
@@ -625,7 +642,7 @@ struct set* relation_domain(struct relation* r) {
 }
 
 struct set* relation_codomain(struct relation* r) {
-    //TODO too ugly -> make better
+    // TODO too ugly -> make better
     struct set* codomain = malloc(sizeof(struct set));
     codomain->nodes = malloc(sizeof(int));
     codomain->size = 0;
@@ -646,7 +663,8 @@ struct set* relation_codomain(struct relation* r) {
             }
         }
         last = min;
-        realloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
+        codomain->nodes =
+            realloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
         codomain->nodes[codomain->size++] = min;
         if (min == max) {
             break;
@@ -658,7 +676,8 @@ struct set* relation_codomain(struct relation* r) {
 bool relation_injective(struct relation* r) {
     for (int i = 0; i < r->size; i++) {
         for (int j = i + 1; j < r->size; j++) {
-            if ((r->nodes[i].a == r->nodes[j].a) || (r->nodes[i].b == r->nodes[j].b)) {
+            if ((r->nodes[i].a == r->nodes[j].a) ||
+                (r->nodes[i].b == r->nodes[j].b)) {
                 return false;
             }
         }
@@ -754,7 +773,53 @@ void free_store(struct store* store) {
     free(store->nodes);
 }
 
+// TODO maybe move this into some function
+const struct command_def COMMAND_DEFS[] = {{.name = "minus",
+                                            .function = set_minus,
+                                            .input = IN_SET_SET,
+                                            .output = OUT_SET},
+                                           {.name = "intersect",
+                                            .function = set_intersect,
+                                            .input = IN_SET_SET,
+                                            .output = OUT_SET},
+                                           {.name = "codomain",
+                                            .function = relation_codomain,
+                                            .input = IN_RELATION,
+                                            .output = OUT_SET},
+                                           {.name = "function",
+                                            .function = relation_function,
+                                            .input = IN_RELATION,
+                                            .output = OUT_BOOL}};
+
 /*------------------------------- STORE RUNNER ------------------------------*/
+
+void run_command(struct command* command, struct store* store) {
+    struct command_def def = COMMAND_DEFS[command->type];
+
+    void* result;
+
+    switch (def.input) {
+        case IN_SET_SET:;
+            void* (*func)(struct set*, struct set*) = def.function;
+            // Check number of arguments
+            result = func(store->nodes[command->args[0]].obj,
+                          store->nodes[command->args[1]].obj);
+            break;
+        default:
+            printf("This input is not implemented yet!\n");
+            return;
+    }
+
+    switch (def.output) {
+        case OUT_SET:;
+            struct set* set = result;
+            print_set(set, store->nodes[0].obj);
+            break;
+        default:
+            printf("This output is not implemented yet!\n");
+            return;
+    }
+}
 
 /**
  * Function for running all things on store
@@ -774,7 +839,7 @@ bool store_runner(struct store* store) {
                 print_relation(store->nodes[i].obj, store->nodes[0].obj);
                 break;
             case COMMAND:
-                printf("Not implemented!\n");
+                run_command(store->nodes[i].obj, store);
                 break;
         }
     }
@@ -972,17 +1037,56 @@ bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
  * @param c Command
  * @return True if everything went well
  */
-bool parse_command(FILE* fp, struct command* c) {
-    // TODO
-    c->type = EMPTY;
+bool parse_command(FILE* fp, struct command* command) {
+    // TODO handle overflow
+    char buffer[STRING_BUFFER_SIZE] = {0};
+    int index = 0;
+    int argument = 0;
 
     while (true) {
         int c = getc(fp);
-        if (c == EOF || c == '\n') {
-            break;
-        }
-    }
+        bool end = c == EOF || c == '\n';
 
+        if (c == ' ' || end) {
+            buffer[index] = '\0';
+            index = 0;
+            if (argument == 0) {
+                // Find command string
+                // TODO
+                bool found = false;
+                int command_count =
+                    sizeof(COMMAND_DEFS) / sizeof(COMMAND_DEFS[0]);
+                for (int i = 0; i < command_count; i++) {
+                    if (strcmp(COMMAND_DEFS[i].name, buffer) == 0) {
+                        found = true;
+                        command->type = i;
+                        break;
+                    }
+                }
+                if (!found) {
+                    return false;
+                }
+            } else {
+                if (argument > MAX_COMMAND_ARGUMENTS) {
+                    return false;
+                }
+                int result = 0;
+                if (!parse_line_number(buffer, &result)) {
+                    return false;
+                }
+                command->args[argument - 1] = result;
+                command->argc++;
+            }
+            if (end) {
+                return true;
+            }
+            argument++;
+            continue;
+        }
+        // TODO fix buffer overflow
+        buffer[index] = c;
+        index++;
+    }
     return true;
 }
 
