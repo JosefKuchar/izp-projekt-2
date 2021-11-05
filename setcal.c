@@ -533,8 +533,8 @@ bool set_equals(struct set* a, struct set* b) {
 
 /**
  * Find out if relation is reflexive
- * @param r Relation
- * @param u Universe
+ * @param r Relation - sorted
+ * @param u Universe - soted
  * @return True if relation is reflexive
  */
 bool relation_reflexive(struct relation* r, struct universe* u) {
@@ -698,6 +698,13 @@ bool relation_bijective(struct relation* r) {
     return relation_injective(r) && relation_surjective(r);
 }
 
+/**
+ * Create reflexive relation closure
+ * @param r Relation - sorted
+ * @param u Universe - soted
+ * @param result Relation - reflexive close will be stored here
+ * @return True if function executed correctly
+ */
 bool relation_closure_ref(struct relation* r, struct universe* u, struct relation* result) {
     // Allocate memory for result relation, which is a copy of original
     result = realloc(result, sizeof(struct relation));
