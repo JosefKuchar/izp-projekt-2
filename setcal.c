@@ -643,11 +643,19 @@ void relation_codomain(struct relation* r, struct universe* u) {
     }
 }
 
-/*
-void relation_injective(struct relation* r) {
+bool relation_injective(struct relation* r) {
     // TODO
+    for (int i = 0; i < r->size; i++) {
+        for (int j = i + 1; j < r->size; j++) {
+            if ((r->nodes[i].a == r->nodes[j].a) || (r->nodes[i].b == r->nodes[j].b)) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
+/*
 void relation_surjective(struct relation* r) {
     // TODO
 }
