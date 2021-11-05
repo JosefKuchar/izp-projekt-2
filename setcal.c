@@ -709,22 +709,22 @@ bool relation_bijective(struct relation* r) {
  */
 bool relation_closure_ref(struct relation* r,
                           struct universe* u,
-                          struct relation* result) {
+                          struct relation** result) {
     // Allocate memory for result relation, which is a copy of original
-    result = realloc(result, sizeof(struct relation));
+    *result = malloc(sizeof(struct relation));
     if (result == NULL) {
         return false;
     }
-    result->nodes =
-        realloc(result->nodes, sizeof(struct relation_node) * (r->size));
-    if (result->nodes == NULL) {
+    struct relation* closure = *result;
+    closure->nodes = malloc(sizeof(struct relation_node) * (r->size));
+    if (closure->nodes == NULL) {
         return false;
     }
-    result->size = r->size;
+    closure->size = r->size;
 
     // Copy original relation to result
-    for (int i = 0; i < result->size; i++) {
-        result->nodes[i] = r->nodes[i];
+    for (int i = 0; i < closure->size; i++) {
+        closure->nodes[i] = r->nodes[i];
     }
 
     // Look for reflexive nodes for each universe element
@@ -745,17 +745,17 @@ bool relation_closure_ref(struct relation* r,
         }
         // Add reflexive element for current universe node
         if (!reflex_for_i) {
-            result->size += 1;
-            result->nodes = realloc(
-                result->nodes, sizeof(struct relation_node) * result->size);
-            if (result->nodes == NULL) {
+            closure->size += 1;
+            closure->nodes = realloc(
+                closure->nodes, sizeof(struct relation_node) * closure->size);
+            if (closure->nodes == NULL) {
                 return false;
             }
-            result->nodes[result->size - 1].a = i;
-            result->nodes[result->size - 1].b = i;
+            closure->nodes[closure->size - 1].a = i;
+            closure->nodes[closure->size - 1].b = i;
         }
     }
-    relation_sort(result);
+    relation_sort(closure);
 
     return true;
 }
