@@ -613,13 +613,33 @@ void relation_domain(struct relation* r, struct univerzum* u) {
             printf(" %s", u->nodes[r->nodes[i].a]);
     }
 }
+
+void relation_codomain(struct relation* r, struct univerzum* u) {
+    //TODO too ugly -> make better
+    int last = -1;
+    int max = -1;
+    for (int i = 0; i < r->size; i++) {
+        if (r->nodes[i].b > max) {
+            max = r->nodes[i].b;
+        }
+    }
+
+    for (int i = 0; i < r->size; i++) {
+        int min = max;
+        for (int k = 0; k < r->size; k++) {
+            if (r->nodes[k].b < min && r->nodes[k].b > last) {
+                min = r->nodes[k].b;
+            }
+        }
+        last = min;
+        printf("%s ", u->nodes[min]);
+        if (min == max) {
+            break;
+        }
+    }
+}
+
 /*
-}
-
-void relation_codomain(struct relation* r) {
-    // TODO
-}
-
 void relation_injective(struct relation* r) {
     // TODO
 }
