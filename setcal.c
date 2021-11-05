@@ -209,10 +209,6 @@ bool relation_valid(struct relation* r) {
  * @return True if store is valid
  */
 bool store_valid(struct store* store) {
-    // Empty store isn't correct
-    if (store->size == 0) {
-        return false;
-    }
     // Ensure good order of node types
     bool u_found = false, s_or_r_found = false, c_found = false;
     for (int i = 0; i < store->size; i++) {
@@ -355,7 +351,7 @@ void set_card(struct set* a) {
 struct set* set_complement(struct set* a, struct univerzum* u) {
     // Allocate memory complement set
     struct set* complement = malloc(sizeof(struct set));
-    complement->nodes = malloc((u->size*sizeof(int)-sizeof(a->nodes)));
+    complement->nodes = malloc((u->size * sizeof(int) - sizeof(a->nodes)));
     complement->size = 0;
 
     int i = 0, k = 0;
@@ -524,24 +520,25 @@ bool set_equals(struct set* a, struct set* b) {
 /*--------------------------- RELATION FUNCTIONS ----------------------------*/
 
 /**
-* Find out if relation is reflexive
-* @param r Relation
-* @param u Univerzum
-* @return True if relation is reflexive
-*/
+ * Find out if relation is reflexive
+ * @param r Relation
+ * @param u Univerzum
+ * @return True if relation is reflexive
+ */
 bool relation_reflexive(struct relation* r, struct univerzum* u) {
     bool reflex_for_i;
 
     // Loop around all universe nodes
-    for(int i = 0; i < u->size; i++){
+    for (int i = 0; i < u->size; i++) {
         reflex_for_i = false;
 
         // Loop around all relation nodes
-        for(int j = 0; j < r->size; j++){
-            // Look for relation nodes that have same value as current universe node
-            if(r->nodes[j].a == i){
+        for (int j = 0; j < r->size; j++) {
+            // Look for relation nodes that have same value as current universe
+            // node
+            if (r->nodes[j].a == i) {
                 // If node is reflective, move on to next universe node
-                if(r->nodes[j].a == r->nodes[j].b){
+                if (r->nodes[j].a == r->nodes[j].b) {
                     reflex_for_i = true;
                     break;
                 }
@@ -553,7 +550,7 @@ bool relation_reflexive(struct relation* r, struct univerzum* u) {
         }
 
         // Relation isn't reflexive
-        if(!reflex_for_i){
+        if (!reflex_for_i) {
             return false;
         }
     }
@@ -561,31 +558,92 @@ bool relation_reflexive(struct relation* r, struct univerzum* u) {
     return true;
 }
 
+bool relation_symmetric(struct relation* r) {
+    for (int i = 0; i < r->size; i++) {
+        for (int k = 0; k < r->size; k++) {
+            if (r->nodes[i].a == r->nodes[k].b && r->nodes[i].b == r->nodes[k].a) {
+                break;
+            }
+            if (k + 1 == r->size) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool relation_antisymmetric(struct relation* r) {
+    for (int i = 0; i < r->size; i++) {
+        for (int k = i + 1; k < r->size; k++) {
+            if (r->nodes[i].a == r->nodes[k].b && r->nodes[i].b == r->nodes[k].a) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool relation_transitive(struct relation* r) {
+    for (int i = 0; i < r->size; i++) {
+        for (int j = 0; j < r->size; j++) {
+            if (r->nodes[i].b == r->nodes[j].a) {
+                for (int k = 0; k < r->size; k++) {
+                    if (r->nodes[i].a == r->nodes[k].a && r->nodes[j].b == r->nodes[k].b) {
+                        break;
+                    }
+                    if (k + 1 == r->size) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+
+bool relation_function(struct relation* r) {
+    for (int i = 0; i < r->size - 1; i++) {
+        if (r->nodes[i].a == r->nodes[i + 1].a) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void relation_domain(struct relation* r, struct univerzum* u) {
+    printf("%s", u->nodes[r->nodes[0].a]);
+    for (int i = 1; i < r->size; i++) {
+        if (r->nodes[i].a != r->nodes[i - 1].a)
+            printf(" %s", u->nodes[r->nodes[i].a]);
+    }
+}
+
+void relation_codomain(struct relation* r, struct univerzum* u) {
+    //TODO too ugly -> make better
+    int last = -1;
+    int max = -1;
+    for (int i = 0; i < r->size; i++) {
+        if (r->nodes[i].b > max) {
+            max = r->nodes[i].b;
+        }
+    }
+
+    for (int i = 0; i < r->size; i++) {
+        int min = max;
+        for (int k = 0; k < r->size; k++) {
+            if (r->nodes[k].b < min && r->nodes[k].b > last) {
+                min = r->nodes[k].b;
+            }
+        }
+        last = min;
+        printf("%s ", u->nodes[min]);
+        if (min == max) {
+            break;
+        }
+    }
+}
+
 /*
-void relation_symmetric(struct relation* r) {
-    // TODO
-}
-
-void relation_antisymmetric(struct relation* r) {
-    // TODO
-}
-
-void relation_transitive(struct relation* r) {
-    // TODO
-}
-
-void relation_function(struct relation* r) {
-    // TODO
-}
-
-void relation_domain(struct relation* r) {
-    // TODO
-}
-
-void relation_codomain(struct relation* r) {
-    // TODO
-}
-
 void relation_injective(struct relation* r) {
     // TODO
 }
@@ -1169,6 +1227,7 @@ int main(int argc, char* argv[]) {
     }
     if (!process_file(fp, &store)) {
         free_store(&store);
+        close_file(fp);
         return EXIT_FAILURE;
     }
     free_store(&store);
