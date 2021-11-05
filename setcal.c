@@ -569,7 +569,6 @@ bool relation_symmetric(struct relation* r) {
 }
 
 bool relation_antisymmetric(struct relation* r) {
-    // TODO
     for (int i = 0; i < r->size; i++) {
         for (int k = i + 1; k < r->size; k++) {
             if (r->nodes[i].a == r->nodes[k].b && r->nodes[i].b == r->nodes[k].a) {
@@ -581,7 +580,6 @@ bool relation_antisymmetric(struct relation* r) {
 }
 
 bool relation_transitive(struct relation* r) {
-    // TODO
     for (int i = 0; i < r->size; i++) {
         for (int j = 0; j < r->size; j++) {
             if (r->nodes[i].b == r->nodes[j].a) {
@@ -600,7 +598,6 @@ bool relation_transitive(struct relation* r) {
 }
 
 bool relation_function(struct relation* r) {
-    // TODO
     for (int i = 0; i < r->size - 1; i++) {
         if (r->nodes[i].a == r->nodes[i + 1].a) {
             return false;
@@ -608,10 +605,15 @@ bool relation_function(struct relation* r) {
     }
     return true;
 }
-/*
 
-void relation_domain(struct relation* r) {
-    // TODO
+void relation_domain(struct relation* r, struct univerzum* u) {
+    printf("%s", u->nodes[r->nodes[0].a]);
+    for (int i = 1; i < r->size; i++) {
+        if (r->nodes[i].a != r->nodes[i - 1].a)
+            printf(" %s", u->nodes[r->nodes[i].a]);
+    }
+}
+/*
 }
 
 void relation_codomain(struct relation* r) {
