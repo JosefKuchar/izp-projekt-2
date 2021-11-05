@@ -599,10 +599,16 @@ bool relation_transitive(struct relation* r) {
     return true;
 }
 
-/*
-void relation_function(struct relation* r) {
+bool relation_function(struct relation* r) {
     // TODO
+    for (int i = 0; i < r->size - 1; i++) {
+        if (r->nodes[i].a == r->nodes[i + 1].a) {
+            return false;
+        }
+    }
+    return true;
 }
+/*
 
 void relation_domain(struct relation* r) {
     // TODO
