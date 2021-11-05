@@ -418,9 +418,10 @@ struct set* set_union(struct set* a, struct set* b) {
  * @param b Set - sorted
  * @return Pointer to new set
  */
-struct set* set_intersect(struct set* a, struct set* b) {
+bool set_intersect(struct set* a, struct set* b, struct set** result) {
     // Allocate memory intersect set
-    struct set* intersect = malloc(sizeof(struct set));
+    *result = malloc(sizeof(struct set));
+    struct set* intersect = *result;
     intersect->nodes = malloc(sizeof(int));
     intersect->size = 0;
 
@@ -437,7 +438,7 @@ struct set* set_intersect(struct set* a, struct set* b) {
             k++;
         }
     }
-    return intersect;
+    return true;
 }
 
 /**
@@ -446,9 +447,10 @@ struct set* set_intersect(struct set* a, struct set* b) {
  * @param b Set - sorted
  * @return Pointer to new set
  */
-struct set* set_minus(struct set* a, struct set* b) {
+bool set_minus(struct set* a, struct set* b, struct set** result) {
     // Allocate memory minus set
-    struct set* minus = malloc(sizeof(struct set));
+    *result = malloc(sizeof(struct set));
+    struct set* minus = *result;
     minus->nodes = malloc(sizeof(int));
     minus->size = 0;
 
@@ -465,7 +467,7 @@ struct set* set_minus(struct set* a, struct set* b) {
             k++;
         }
     }
-    return minus;
+    return true;
 }
 
 /**
@@ -705,20 +707,23 @@ bool relation_bijective(struct relation* r) {
  * @param result Relation - reflexive close will be stored here
  * @return True if function executed correctly
  */
-bool relation_closure_ref(struct relation* r, struct universe* u, struct relation* result) {
+bool relation_closure_ref(struct relation* r,
+                          struct universe* u,
+                          struct relation* result) {
     // Allocate memory for result relation, which is a copy of original
     result = realloc(result, sizeof(struct relation));
-    if(result == NULL){
+    if (result == NULL) {
         return false;
     }
-    result->nodes = realloc(result->nodes, sizeof(struct relation_node) * (r->size));
-    if(result->nodes == NULL){
+    result->nodes =
+        realloc(result->nodes, sizeof(struct relation_node) * (r->size));
+    if (result->nodes == NULL) {
         return false;
     }
     result->size = r->size;
 
     // Copy original relation to result
-    for(int i = 0; i < result->size; i++){
+    for (int i = 0; i < result->size; i++) {
         result->nodes[i] = r->nodes[i];
     }
 
@@ -741,8 +746,9 @@ bool relation_closure_ref(struct relation* r, struct universe* u, struct relatio
         // Add reflexive element for current universe node
         if (!reflex_for_i) {
             result->size += 1;
-            result->nodes = realloc(result->nodes, sizeof(struct relation_node) * result->size);
-            if(result->nodes == NULL){
+            result->nodes = realloc(
+                result->nodes, sizeof(struct relation_node) * result->size);
+            if (result->nodes == NULL) {
                 return false;
             }
             result->nodes[result->size - 1].a = i;
@@ -862,11 +868,12 @@ void run_command(struct command* command, struct store* store) {
 
     switch (def.input) {
         case IN_SET_SET:;
-            void* (*func)(struct set*, struct set*) = def.function;
+            bool (*func)(struct set*, struct set*, void** result) =
+                def.function;
             // TODO Check number of arguments
             // TODO Check object types
-            result = func(store->nodes[command->args[0]].obj,
-                          store->nodes[command->args[1]].obj);
+            func(store->nodes[command->args[0]].obj,
+                 store->nodes[command->args[1]].obj, &result);
             break;
         default:
             printf("This input is not implemented yet!\n");
