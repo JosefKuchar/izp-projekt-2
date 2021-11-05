@@ -696,7 +696,6 @@ bool relation_surjective(struct relation* r) {
 
 bool relation_bijective(struct relation* r) {
     return relation_injective(r) && relation_surjective(r);
-    
 }
 
 /*
@@ -799,6 +798,11 @@ const struct command_def COMMAND_DEFS[] = {{.name = "minus",
 
 /*------------------------------- STORE RUNNER ------------------------------*/
 
+/**
+ * Function for running commands
+ * @param command Command
+ * @param store Store
+ */
 void run_command(struct command* command, struct store* store) {
     struct command_def def = COMMAND_DEFS[command->type];
 
@@ -807,7 +811,8 @@ void run_command(struct command* command, struct store* store) {
     switch (def.input) {
         case IN_SET_SET:;
             void* (*func)(struct set*, struct set*) = def.function;
-            // Check number of arguments
+            // TODO Check number of arguments
+            // TODO Check object types
             result = func(store->nodes[command->args[0]].obj,
                           store->nodes[command->args[1]].obj);
             break;
