@@ -545,6 +545,10 @@ bool relation_reflexive(struct relation* r, struct univerzum* u) {
                     reflex_for_i = true;
                     break;
                 }
+            // Relation is sorted (ascending), we won't find a match again
+            // if the first relation node element is larger than current universe node
+            }else if(r->nodes[j].a > i){
+                break;
             }
         }
 
