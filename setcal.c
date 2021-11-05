@@ -643,17 +643,10 @@ struct set* relation_domain(struct relation* r) {
     return domain;
 }
 
-bool relation_codomain(struct relation* r, struct set** result) {
+struct set* relation_codomain(struct relation* r) {
     // TODO too ugly -> make better
-    *result = malloc(sizeof(struct set));
-    if(*result == NULL){
-        return false;
-    }
-    struct set* codomain = *result;
+    struct set* codomain = malloc(sizeof(struct set));
     codomain->nodes = malloc(sizeof(int));
-    if(codomain->nodes = NULL){
-        return false;
-    }
     codomain->size = 0;
 
     int last = -1;
@@ -674,49 +667,37 @@ bool relation_codomain(struct relation* r, struct set** result) {
         last = min;
         codomain->nodes =
             realloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
-            if(codomain->nodes == NULL){
-                return false;
-            }
         codomain->nodes[codomain->size++] = min;
         if (min == max) {
             break;
         }
     }
-    return true;
+    return codomain;
 }
 
-bool relation_injective(struct relation* r, bool* result) {
+bool relation_injective(struct relation* r) {
     for (int i = 0; i < r->size; i++) {
         for (int j = i + 1; j < r->size; j++) {
             if ((r->nodes[i].a == r->nodes[j].a) ||
                 (r->nodes[i].b == r->nodes[j].b)) {
-                *result = true;
-                return true;
+                return false;
             }
         }
     }
-    *result = false;
     return true;
 }
 
-bool relation_surjective(struct relation* r, bool* result) {
+bool relation_surjective(struct relation* r) {
     for (int i = 1; i < r->size; i++) {
         if (r->nodes[i].a == r->nodes[i - 1].a) {
-            *result = false;
-            return true;
+            return false;
         }
     }
-    *result = true;
     return true;
 }
 
-bool relation_bijective(struct relation* r, bool* result) {
-    bool temp1, temp2;
-    if(!relation_injective(r, &temp1) || !relation_surjective(r, &temp2)){
-        return false;
-    }
-    *result = temp1 && temp2;
-    return true;
+bool relation_bijective(struct relation* r) {
+    return relation_injective(r) && relation_surjective(r);
 }
 
 /**
