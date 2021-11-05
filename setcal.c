@@ -407,7 +407,7 @@ struct set* set_union(struct set* a, struct set* b) {
  * @return Pointer to new set
  */
 struct set* set_intersect(struct set* a, struct set* b) {
-    // TODO
+    // Allocate memory intersect set
     struct set* intersect = malloc(sizeof(struct set));
     intersect->nodes = malloc(sizeof(int));
     intersect->size = 0;
@@ -542,9 +542,9 @@ bool relation_reflexive(struct relation* r, struct universe* u) {
                     reflex_for_i = true;
                     break;
                 }
-            // Relation is sorted (ascending), we won't find a match again
-            // if the first relation node element is larger than current universe node
-            }else if(r->nodes[j].a > i){
+                // Relation is sorted (ascending), we won't find a match again
+                // if the first relation node element is larger than current universe node
+            } else if (r->nodes[j].a > i) {
                 break;
             }
         }
@@ -624,8 +624,12 @@ struct set* relation_domain(struct relation* r) {
     return domain;
 }
 
-void relation_codomain(struct relation* r, struct universe* u) {
+struct set* relation_codomain(struct relation* r) {
     //TODO too ugly -> make better
+    struct set* codomain = malloc(sizeof(struct set));
+    codomain->nodes = malloc(sizeof(int));
+    codomain->size = 0;
+
     int last = -1;
     int max = -1;
     for (int i = 0; i < r->size; i++) {
@@ -642,15 +646,16 @@ void relation_codomain(struct relation* r, struct universe* u) {
             }
         }
         last = min;
-        printf("%s ", u->nodes[min]);
+        realloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
+        codomain->nodes[codomain->size++] = min;
         if (min == max) {
             break;
         }
     }
+    return codomain;
 }
 
 bool relation_injective(struct relation* r) {
-    // TODO
     for (int i = 0; i < r->size; i++) {
         for (int j = i + 1; j < r->size; j++) {
             if ((r->nodes[i].a == r->nodes[j].a) || (r->nodes[i].b == r->nodes[j].b)) {
