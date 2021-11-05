@@ -580,11 +580,26 @@ bool relation_antisymmetric(struct relation* r) {
     return true;
 }
 
-/*
-void relation_transitive(struct relation* r) {
+bool relation_transitive(struct relation* r) {
     // TODO
+    for (int i = 0; i < r->size; i++) {
+        for (int j = 0; j < r->size; j++) {
+            if (r->nodes[i].b == r->nodes[j].a) {
+                for (int k = 0; k < r->size; k++) {
+                    if (r->nodes[i].a == r->nodes[k].a && r->nodes[j].b == r->nodes[k].b) {
+                        break;
+                    }
+                    if (k + 1 == r->size) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
 }
 
+/*
 void relation_function(struct relation* r) {
     // TODO
 }
