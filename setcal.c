@@ -610,12 +610,18 @@ bool relation_function(struct relation* r) {
     return true;
 }
 
-void relation_domain(struct relation* r, struct universe* u) {
-    printf("%s", u->nodes[r->nodes[0].a]);
+struct set* relation_domain(struct relation* r) {
+    struct set* domain = malloc(sizeof(struct set));
+    domain->nodes = malloc(sizeof(int));
+    domain->size = 0;
+    domain->nodes[domain->size++] = r->nodes[0].a;
     for (int i = 1; i < r->size; i++) {
-        if (r->nodes[i].a != r->nodes[i - 1].a)
-            printf(" %s", u->nodes[r->nodes[i].a]);
+        if (r->nodes[i].a != r->nodes[i - 1].a) {
+            realloc(domain->nodes, sizeof(int) * (domain->size + 1));
+            domain->nodes[domain->size++] = r->nodes[i].a;
+        }
     }
+    return domain;
 }
 
 void relation_codomain(struct relation* r, struct universe* u) {
