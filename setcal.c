@@ -699,11 +699,56 @@ bool relation_bijective(struct relation* r) {
     
 }
 
-/*
-void relation_closure_ref() {
-    // TODO
+bool relation_closure_ref(struct relation* r, struct universe* u, struct relation* result) {
+    // Allocate memory for result relation, which is a copy of original
+    result = realloc(result, sizeof(struct relation));
+    if(result == NULL){
+        return false;
+    }
+    result->nodes = realloc(result->nodes, sizeof(struct relation_node) * (r->size));
+    if(result->nodes == NULL){
+        return false;
+    }
+    result->size = r->size;
+
+    // Copy original relation to result
+    for(int i = 0; i < result->size; i++){
+        result->nodes[i] = r->nodes[i];
+    }
+
+    // Look for reflexive nodes for each universe element
+    // if we don't find any, then add it to result
+    bool reflex_for_i;
+    for (int i = 0; i < u->size; i++) {
+        reflex_for_i = false;
+
+        for (int j = 0; j < r->size; j++) {
+            if (r->nodes[j].a == i) {
+                if (r->nodes[j].a == r->nodes[j].b) {
+                    reflex_for_i = true;
+                    break;
+                }
+            } else if (r->nodes[j].a > i) {
+                break;
+            }
+        }
+        // Add reflexive element for current universe node
+        if (!reflex_for_i) {
+            result->size += 1;
+            result->nodes = realloc(result->nodes, sizeof(struct relation_node) * result->size);
+            if(result->nodes == NULL){
+                return false;
+            }
+            result->nodes[result->size - 1].a = i;
+            result->nodes[result->size - 1].b = i;
+        }
+    }
+    relation_sort(result);
+
+    return true;
 }
 
+/*
 void relation_closure_sym() {
     // TODO
 }
