@@ -667,7 +667,6 @@ bool relation_injective(struct relation* r) {
 }
 
 bool relation_surjective(struct relation* r) {
-    // TODO
     for (int i = 1; i < r->size; i++) {
         if (r->nodes[i].a == r->nodes[i - 1].a) {
             return false;
@@ -676,11 +675,12 @@ bool relation_surjective(struct relation* r) {
     return true;
 }
 
-/*
-void relation_bijective(struct relation* r) {
-    // TODO
+bool relation_bijective(struct relation* r) {
+    return relation_injective(r) && relation_surjective(r);
+    
 }
 
+/*
 void relation_closure_ref() {
     // TODO
 }
