@@ -804,13 +804,64 @@ struct relation* relation_closure_sym(struct relation* r) {
     return result;
 }
 
-/*
-void relation_trans_sym() {
-    //TODO
+/**
+ * Create transitive relation closure
+ * @param r Relation - sorted
+ * @param u Universe - soted
+ * @return Pointer to transitive relation closure
+ * or NULL if didn't execute correctly
+ */
+struct relation* relation_closure_trans(struct relation* r) {
+    // Create a copy of the original relation
+    struct relation* result = malloc(sizeof(struct relation));
+    if(result == NULL){
+        return NULL;
+    }
+    result->nodes = malloc(sizeof(struct relation_node) * r->size);
+    if(result->nodes == NULL){
+        return NULL;
+    }
+    result->size = r->size;
+
+    for(int i = 0; i < result->size; i++){
+        result->nodes[i] = r->nodes[i];
+    }
+
+    // Compare second element of i with all first elements
+    for (int i = 0; i < result->size; i++) {
+        for (int j = 0; j < result->size; j++) {
+            // If aRb and bRc, look if aRc
+            if (result->nodes[i].b == result->nodes[j].a) {
+                for (int k = 0; k < result->size; k++) {
+                    // If aRc, go to the next i
+                    if (result->nodes[i].a == result->nodes[k].a &&
+                        result->nodes[j].b == result->nodes[k].b) {
+                        break;
+                    }
+                    // If we don't find a node that says aRc,
+                    // add that node as the last one
+                    if (k + 1 == result->size) {
+                        result->size += 1;
+                        result->nodes = realloc(result->nodes, sizeof(struct relation_node) * result->size);
+                        if(result->nodes == NULL){
+                            return NULL;
+                        }
+                        result->nodes[result->size - 1].a = result->nodes[i].a;
+                        result->nodes[result->size - 1].b = result->nodes[j].b;
+
+                        // Start highest for loop over (i = 0 after i++)
+                        i = -1;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+    relation_sort(result);
+
+    return result;
 }
-
-
-*/
 
 /*------------------------ MEMORY FREEING FUNCTIONS -------------------------*/
 
