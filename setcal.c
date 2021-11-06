@@ -418,10 +418,9 @@ struct set* set_union(struct set* a, struct set* b) {
  * @param b Set - sorted
  * @return Pointer to new set
  */
-bool set_intersect(struct set* a, struct set* b, struct set** result) {
+struct set* set_intersect(struct set* a, struct set* b) {
     // Allocate memory intersect set
-    *result = malloc(sizeof(struct set));
-    struct set* intersect = *result;
+    struct set* intersect = malloc(sizeof(struct set));
     intersect->nodes = malloc(sizeof(int));
     intersect->size = 0;
 
@@ -438,7 +437,7 @@ bool set_intersect(struct set* a, struct set* b, struct set** result) {
             k++;
         }
     }
-    return true;
+    return intersect;
 }
 
 /**
@@ -447,10 +446,9 @@ bool set_intersect(struct set* a, struct set* b, struct set** result) {
  * @param b Set - sorted
  * @return Pointer to new set
  */
-bool set_minus(struct set* a, struct set* b, struct set** result) {
+struct set* set_minus(struct set* a, struct set* b) {
     // Allocate memory minus set
-    *result = malloc(sizeof(struct set));
-    struct set* minus = *result;
+    struct set* minus = malloc(sizeof(struct set));
     minus->nodes = malloc(sizeof(int));
     minus->size = 0;
 
@@ -467,7 +465,7 @@ bool set_minus(struct set* a, struct set* b, struct set** result) {
             k++;
         }
     }
-    return true;
+    return minus;
 }
 
 /**
@@ -768,16 +766,16 @@ struct relation* relation_closure_ref(struct relation* r, struct universe* u) {
 struct relation* relation_closure_sym(struct relation* r) {
     // Create a copy of original relation where additional nodes can be added
     struct relation* result = malloc(sizeof(struct relation));
-    if(result == NULL){
+    if (result == NULL) {
         return NULL;
     }
     result->nodes = malloc(sizeof(struct relation_node) * r->size);
-    if(result->nodes == NULL){
+    if (result->nodes == NULL) {
         return NULL;
     }
     result->size = r->size;
 
-    for(int i = 0; i < result->size; i++){
+    for (int i = 0; i < result->size; i++) {
         result->nodes[i] = r->nodes[i];
     }
 
@@ -790,8 +788,9 @@ struct relation* relation_closure_sym(struct relation* r) {
             // If relation is missing node to be symetric, add that node
             if (k + 1 == r->size) {
                 result->size += 1;
-                result->nodes = realloc(result->nodes, sizeof(struct relation_node) * result->size);
-                if(result->nodes == NULL){
+                result->nodes = realloc(
+                    result->nodes, sizeof(struct relation_node) * result->size);
+                if (result->nodes == NULL) {
                     return NULL;
                 }
                 result->nodes[result->size - 1].a = r->nodes[i].b;
@@ -814,16 +813,16 @@ struct relation* relation_closure_sym(struct relation* r) {
 struct relation* relation_closure_trans(struct relation* r) {
     // Create a copy of the original relation
     struct relation* result = malloc(sizeof(struct relation));
-    if(result == NULL){
+    if (result == NULL) {
         return NULL;
     }
     result->nodes = malloc(sizeof(struct relation_node) * r->size);
-    if(result->nodes == NULL){
+    if (result->nodes == NULL) {
         return NULL;
     }
     result->size = r->size;
 
-    for(int i = 0; i < result->size; i++){
+    for (int i = 0; i < result->size; i++) {
         result->nodes[i] = r->nodes[i];
     }
 
@@ -842,8 +841,10 @@ struct relation* relation_closure_trans(struct relation* r) {
                     // add that node as the last one
                     if (k + 1 == result->size) {
                         result->size += 1;
-                        result->nodes = realloc(result->nodes, sizeof(struct relation_node) * result->size);
-                        if(result->nodes == NULL){
+                        result->nodes = realloc(
+                            result->nodes,
+                            sizeof(struct relation_node) * result->size);
+                        if (result->nodes == NULL) {
                             return NULL;
                         }
                         result->nodes[result->size - 1].a = result->nodes[i].a;
@@ -959,12 +960,11 @@ void run_command(struct command* command, struct store* store) {
 
     switch (def.input) {
         case IN_SET_SET:;
-            bool (*func)(struct set*, struct set*, void** result) =
-                def.function;
+            void* (*func)(struct set*, struct set*) = def.function;
             // TODO Check number of arguments
             // TODO Check object types
-            func(store->nodes[command->args[0]].obj,
-                 store->nodes[command->args[1]].obj, &result);
+            result = func(store->nodes[command->args[0]].obj,
+                          store->nodes[command->args[1]].obj);
             break;
         default:
             printf("This input is not implemented yet!\n");
