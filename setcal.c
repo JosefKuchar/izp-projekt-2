@@ -14,6 +14,7 @@
 #include <stdio.h>    // IO functions
 #include <stdlib.h>   // EXIT macros
 #include <string.h>   // String manipulation functions
+#include <time.h>     // For seeding random generator
 
 /*-------------------------------- CONSTANTS --------------------------------*/
 
@@ -864,6 +865,12 @@ struct relation* relation_closure_trans(struct relation* r) {
     return result;
 }
 
+/*---------------------------- SPECIAL COMMANDS -----------------------------*/
+
+void select_command() {
+    printf("%d\n", rand());
+}
+
 /*------------------------ MEMORY FREEING FUNCTIONS -------------------------*/
 
 /**
@@ -929,7 +936,11 @@ void free_store(struct store* store) {
 }
 
 // TODO maybe move this into some function
-const struct command_def COMMAND_DEFS[] = {{.name = "minus",
+const struct command_def COMMAND_DEFS[] = {{.name = "empty",
+                                            .function = set_empty,
+                                            .input = IN_SET,
+                                            .output = OUT_BOOL},
+                                           {.name = "minus",
                                             .function = set_minus,
                                             .input = IN_SET_SET,
                                             .output = OUT_SET},
@@ -952,35 +963,65 @@ const struct command_def COMMAND_DEFS[] = {{.name = "minus",
  * Function for running commands
  * @param command Command
  * @param store Store
+ * @param i Program counter
  */
-void run_command(struct command* command, struct store* store) {
+bool run_command(struct command* command, struct store* store, int* i) {
     struct command_def def = COMMAND_DEFS[command->type];
 
     void* result;
 
     switch (def.input) {
+        case IN_SET:;
+            void* (*function)(struct set*) = def.function;
+            result = function(store->nodes[command->args[0] - 1].obj);
+            break;
         case IN_SET_SET:;
             void* (*func)(struct set*, struct set*) = def.function;
             // TODO Check number of arguments
             // TODO Check object types
-            result = func(store->nodes[command->args[0]].obj,
-                          store->nodes[command->args[1]].obj);
+            result = func(store->nodes[command->args[0] - 1].obj,
+                          store->nodes[command->args[1] - 1].obj);
             break;
         default:
             printf("This input is not implemented yet!\n");
-            return;
+            return true;  // True so it doesn't end
     }
 
     switch (def.output) {
         case OUT_SET:;
+            if (result == NULL) {
+                return false;
+            }
             struct set* set = result;
             print_set(set, store->nodes[0].obj);
-            free_set(set);
+            // Replace command with actual set in store
+            free_command(store->nodes[*i].obj);
+            store->nodes[*i].type = SET;
+            store->nodes[*i].obj = result;
             break;
-        default:
-            printf("This output is not implemented yet!\n");
-            return;
+        case OUT_RELATION:;
+            if (result == NULL) {
+                return false;
+            }
+            struct relation* relation = result;
+            print_relation(relation, store->nodes[0].obj);
+            // Replace command with actual relation in store
+            free_command(store->nodes[*i].obj);
+            store->nodes[*i].type = RELATION;
+            store->nodes[*i].obj = result;
+            break;
+        case OUT_BOOL:;
+            bool b = result;
+            print_bool(b);
+            if (!b) {
+                // TODO jumping
+            }
+            break;
+        case OUT_VOID:
+            break;
     }
+
+    return true;
 }
 
 /**
@@ -1001,7 +1042,11 @@ bool store_runner(struct store* store) {
                 print_relation(store->nodes[i].obj, store->nodes[0].obj);
                 break;
             case COMMAND:
-                run_command(store->nodes[i].obj, store);
+                // Command can modify program counter
+                if (!run_command(store->nodes[i].obj, store, &i)) {
+                    fprintf(stderr, "Error running command!\n");
+                    return false;
+                };
                 break;
         }
     }
@@ -1501,6 +1546,11 @@ int main(int argc, char* argv[]) {
     if (fp == NULL) {
         return EXIT_FAILURE;
     }
+
+    // Seed random generator
+    srand(time(NULL));
+
+    select_command();
 
     // Process file
     struct store store;
