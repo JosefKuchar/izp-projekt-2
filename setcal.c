@@ -364,7 +364,13 @@ void set_card(struct set* a) {
 struct set* set_complement(struct set* a, struct universe* u) {
     // Allocate memory complement set
     struct set* complement = malloc(sizeof(struct set));
+    if (complement == NULL){
+        return NULL;
+    }
     complement->nodes = malloc((u->size * sizeof(int) - sizeof(a->nodes)));
+    if (complement->nodes == NULL){
+        return NULL;
+    }
     complement->size = 0;
 
     int i = 0, k = 0;
@@ -389,13 +395,22 @@ struct set* set_complement(struct set* a, struct universe* u) {
 struct set* set_union(struct set* a, struct set* b) {
     // Allocate memory union set
     struct set* s_union = malloc(sizeof(struct set));
+    if (s_union == NULL){
+        return NULL;
+    }
     s_union->nodes = malloc(sizeof(int));
+    if (s_union->nodes == NULL){
+        return NULL;
+    }
     s_union->size = 0;
 
     int i = 0, k = 0;
     while (i < a->size || k < b->size) {
         s_union->nodes =
             realloc(s_union->nodes, sizeof(int) * (s_union->size + 1));
+        if (s_union->nodes == NULL){
+            return NULL;
+        }
         if (i > a->size) {
             s_union->nodes[s_union->size] = b->nodes[k++];
         } else if (k > b->size) {
@@ -422,7 +437,13 @@ struct set* set_union(struct set* a, struct set* b) {
 struct set* set_intersect(struct set* a, struct set* b) {
     // Allocate memory intersect set
     struct set* intersect = malloc(sizeof(struct set));
+    if (intersect == NULL){
+        return NULL;
+    }
     intersect->nodes = malloc(sizeof(int));
+    if (intersect->nodes == NULL){
+        return NULL;
+    }
     intersect->size = 0;
 
     int i = 0, k = 0;
@@ -430,6 +451,9 @@ struct set* set_intersect(struct set* a, struct set* b) {
         if (a->nodes[i] == b->nodes[k]) {
             intersect->nodes =
                 realloc(intersect->nodes, sizeof(int) * (intersect->size + 1));
+            if (intersect->nodes == NULL){
+                return NULL;
+            }
             intersect->nodes[intersect->size++] = a->nodes[i++];
             k++;
         } else if (a->nodes[i] < b->nodes[k]) {
@@ -450,7 +474,13 @@ struct set* set_intersect(struct set* a, struct set* b) {
 struct set* set_minus(struct set* a, struct set* b) {
     // Allocate memory minus set
     struct set* minus = malloc(sizeof(struct set));
+    if (minus == NULL){
+        return NULL;
+    }
     minus->nodes = malloc(sizeof(int));
+    if (minus->nodes == NULL){
+        return NULL;
+    }
     minus->size = 0;
 
     int i = 0, k = 0;
@@ -458,6 +488,9 @@ struct set* set_minus(struct set* a, struct set* b) {
         if (k > b->size || a->nodes[i] < b->nodes[k]) {
             minus->nodes =
                 realloc(minus->nodes, sizeof(int) * (minus->size + 1));
+            if (minus->nodes == NULL){
+                return NULL;
+            }
             minus->nodes[minus->size++] = a->nodes[i++];
         } else if (a->nodes[i] == b->nodes[k]) {
             i++;
@@ -629,13 +662,22 @@ bool relation_function(struct relation* r) {
 
 struct set* relation_domain(struct relation* r) {
     struct set* domain = malloc(sizeof(struct set));
+    if (domain == NULL){
+        return NULL;
+    }
     domain->nodes = malloc(sizeof(int));
+    if (domain->nodes == NULL){
+        return NULL;
+    }
     domain->size = 0;
     domain->nodes[domain->size++] = r->nodes[0].a;
     for (int i = 1; i < r->size; i++) {
         if (r->nodes[i].a != r->nodes[i - 1].a) {
             domain->nodes =
                 realloc(domain->nodes, sizeof(int) * (domain->size + 1));
+            if (domain->nodes == NULL){
+                return NULL;
+            }
             domain->nodes[domain->size++] = r->nodes[i].a;
         }
     }
@@ -645,7 +687,13 @@ struct set* relation_domain(struct relation* r) {
 struct set* relation_codomain(struct relation* r) {
     // TODO too ugly -> make better
     struct set* codomain = malloc(sizeof(struct set));
+    if (codomain == NULL){
+        return NULL;
+    }
     codomain->nodes = malloc(sizeof(int));
+    if (codomain->nodes == NULL){
+        return NULL;
+    }
     codomain->size = 0;
 
     int last = -1;
@@ -666,6 +714,9 @@ struct set* relation_codomain(struct relation* r) {
         last = min;
         codomain->nodes =
             realloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
+        if (codomain->nodes == NULL){
+            return NULL;
+        }
         codomain->nodes[codomain->size++] = min;
         if (min == max) {
             break;
