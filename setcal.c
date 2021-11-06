@@ -868,6 +868,7 @@ struct relation* relation_closure_trans(struct relation* r) {
 /*---------------------------- SPECIAL COMMANDS -----------------------------*/
 
 void select_command() {
+    // TODO
     printf("%d\n", rand());
 }
 
@@ -1549,8 +1550,6 @@ int main(int argc, char* argv[]) {
 
     // Seed random generator
     srand(time(NULL));
-
-    select_command();
 
     // Process file
     struct store store;
