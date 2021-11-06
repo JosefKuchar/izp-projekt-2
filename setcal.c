@@ -867,9 +867,66 @@ struct relation* relation_closure_trans(struct relation* r) {
 
 /*---------------------------- SPECIAL COMMANDS -----------------------------*/
 
-void select_command() {
-    // TODO
-    printf("%d\n", rand());
+/**
+ * Select random item from set
+ * @param s Set
+ * @param u Universe
+ * @return True if set is not empty
+ */
+bool select_random_from_set(struct set* s, struct universe* u) {
+    // Check if set is empty
+    if (set_empty(s)) {
+        return false;
+    }
+    // Get random index to set
+    int rand_index = rand() % s->size;
+    // Find index to universe
+    int universe_index = s->nodes[rand_index];
+    // Print element from universe
+    printf("%s\n", u->nodes[universe_index]);
+
+    return true;
+}
+
+/**
+ * Select random item from relation
+ * @param r Relation
+ * @param u Universe
+ * @return True if relation is not empty
+ */
+bool select_random_from_relation(struct relation* r, struct universe* u) {
+    // Check if relation is empty
+    if (r->size == 0) {
+        return false;
+    }
+    // Get random index to relation
+    int rand_index = rand() % r->size;
+    // Find a, b in relation
+    struct relation_node node = r->nodes[rand_index];
+    // Randomly select index to universe from a, b
+    int universe_index = rand() % 2 == 0 ? node.a : node.b;
+    // Print element from universe
+    printf("%s\n", u->nodes[universe_index]);
+
+    return true;
+}
+
+/**
+ * Select command
+ * @param node Node from universe (set or relation)
+ * @param u Universe
+ * @return True if node is not empty
+ */
+bool select_command(struct store_node* node, struct universe* u) {
+    switch (node->type) {
+        case SET:
+            return select_random_from_set(node->obj, u);
+        case RELATION:
+            return select_random_from_relation(node->obj, u);
+        default:
+            fprintf(stderr, "Invalid node type!\n");
+            return false;
+    }
 }
 
 /*------------------------ MEMORY FREEING FUNCTIONS -------------------------*/
