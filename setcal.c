@@ -483,7 +483,7 @@ struct set* set_intersect(struct set* a, struct set* b) {
         return NULL;
     }
     intersect->size = 0;
-    int size = find_min(a->size, b->size) * sizeof(int);
+    int size = get_min(a->size, b->size) * sizeof(int);
     if (size == 0) {
         return intersect;
     }
@@ -495,11 +495,6 @@ struct set* set_intersect(struct set* a, struct set* b) {
     int i = 0, k = 0;
     while (i < a->size && k < b->size) {
         if (a->nodes[i] == b->nodes[k]) {
-            intersect->nodes =
-                srealloc(intersect->nodes, sizeof(int) * (intersect->size + 1));
-            if (intersect->nodes == NULL) {
-                return NULL;
-            }
             intersect->nodes[intersect->size++] = a->nodes[i++];
             k++;
         } else if (a->nodes[i] < b->nodes[k]) {
