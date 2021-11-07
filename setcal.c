@@ -413,6 +413,7 @@ struct set* set_complement(struct set* a, struct universe* u) {
     }
     complement->nodes = malloc(size);
     if (complement->nodes == NULL) {
+        free(complement);
         return NULL;
     }
 
@@ -448,6 +449,7 @@ struct set* set_union(struct set* a, struct set* b) {
     }
     s_union->nodes = malloc(size);
     if (s_union->nodes == NULL) {
+        free(s_union);
         return NULL;
     }
 
@@ -489,6 +491,7 @@ struct set* set_intersect(struct set* a, struct set* b) {
     }
     intersect->nodes = malloc(size);
     if (intersect->nodes == NULL) {
+        free(intersect);
         return NULL;
     }
 
@@ -518,11 +521,16 @@ struct set* set_minus(struct set* a, struct set* b) {
     if (minus == NULL) {
         return NULL;
     }
-    minus->nodes = malloc(a->size * sizeof(int));
+    minus->size = 0;
+    int size = a->size * sizeof(int);
+    if (size == 0) {
+        return minus;
+    }
+    minus->nodes = malloc(size);
     if (minus->nodes == NULL) {
+        free(minus);
         return NULL;
     }
-    minus->size = 0;
 
     int i = 0, k = 0;
     while (i < a->size) {
@@ -1023,8 +1031,10 @@ bool select_command(struct store_node* node, struct universe* u) {
  * @param u Universe
  */
 void free_universe(struct universe* u) {
-    free(u->nodes);
-    free(u);
+    if (u != NULL) {
+        free(u->nodes);
+        free(u);
+    }
 }
 
 /**
@@ -1032,8 +1042,10 @@ void free_universe(struct universe* u) {
  * @param s Set
  */
 void free_set(struct set* s) {
-    free(s->nodes);
-    free(s);
+    if (s != NULL) {
+        free(s->nodes);
+        free(s);
+    }
 }
 
 /**
@@ -1041,8 +1053,10 @@ void free_set(struct set* s) {
  * @param r Relation
  */
 void free_relation(struct relation* r) {
-    free(r->nodes);
-    free(r);
+    if (r != NULL) {
+        free(r->nodes);
+        free(r);
+    }
 }
 
 /**
