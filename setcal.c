@@ -446,7 +446,7 @@ struct set* set_union(struct set* a, struct set* b) {
     int i = 0, k = 0;
     while (i < a->size || k < b->size) {
         s_union->nodes =
-            realloc(s_union->nodes, sizeof(int) * (s_union->size + 1));
+            srealloc(s_union->nodes, sizeof(int) * (s_union->size + 1));
         if (s_union->nodes == NULL) {
             return NULL;
         }
@@ -489,7 +489,7 @@ struct set* set_intersect(struct set* a, struct set* b) {
     while (i < a->size && k < b->size) {
         if (a->nodes[i] == b->nodes[k]) {
             intersect->nodes =
-                realloc(intersect->nodes, sizeof(int) * (intersect->size + 1));
+                srealloc(intersect->nodes, sizeof(int) * (intersect->size + 1));
             if (intersect->nodes == NULL) {
                 return NULL;
             }
@@ -526,7 +526,7 @@ struct set* set_minus(struct set* a, struct set* b) {
     while (i < a->size) {
         if (k > b->size || a->nodes[i] < b->nodes[k]) {
             minus->nodes =
-                realloc(minus->nodes, sizeof(int) * (minus->size + 1));
+                srealloc(minus->nodes, sizeof(int) * (minus->size + 1));
             if (minus->nodes == NULL) {
                 return NULL;
             }
@@ -713,7 +713,7 @@ struct set* relation_domain(struct relation* r) {
     for (int i = 1; i < r->size; i++) {
         if (r->nodes[i].a != r->nodes[i - 1].a) {
             domain->nodes =
-                realloc(domain->nodes, sizeof(int) * (domain->size + 1));
+                srealloc(domain->nodes, sizeof(int) * (domain->size + 1));
             if (domain->nodes == NULL) {
                 return NULL;
             }
@@ -752,7 +752,7 @@ struct set* relation_codomain(struct relation* r) {
         }
         last = min;
         codomain->nodes =
-            realloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
+            srealloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
         if (codomain->nodes == NULL) {
             return NULL;
         }
@@ -833,7 +833,7 @@ struct relation* relation_closure_ref(struct relation* r, struct universe* u) {
         // Add reflexive element for current universe node
         if (!reflex_for_i) {
             result->size += 1;
-            result->nodes = realloc(
+            result->nodes = srealloc(
                 result->nodes, sizeof(struct relation_node) * result->size);
             if (result->nodes == NULL) {
                 return NULL;
@@ -879,7 +879,7 @@ struct relation* relation_closure_sym(struct relation* r) {
             // If relation is missing node to be symetric, add that node
             if (k + 1 == r->size) {
                 result->size += 1;
-                result->nodes = realloc(
+                result->nodes = srealloc(
                     result->nodes, sizeof(struct relation_node) * result->size);
                 if (result->nodes == NULL) {
                     return NULL;
@@ -932,7 +932,7 @@ struct relation* relation_closure_trans(struct relation* r) {
                     // add that node as the last one
                     if (k + 1 == result->size) {
                         result->size += 1;
-                        result->nodes = realloc(
+                        result->nodes = srealloc(
                             result->nodes,
                             sizeof(struct relation_node) * result->size);
                         if (result->nodes == NULL) {
@@ -1256,7 +1256,7 @@ bool parse_universe(FILE* fp, struct universe* u) {
         } else if (c == ' ') {
             u->size++;
             index = 0;
-            u->nodes = realloc(u->nodes, sizeof(*u->nodes) * u->size);
+            u->nodes = srealloc(u->nodes, sizeof(*u->nodes) * u->size);
             memset(u->nodes[u->size - 1], 0, STRING_BUFFER_SIZE);
             continue;
             // Handle invalid characters
@@ -1294,7 +1294,7 @@ bool parse_set(FILE* fp, struct set* s, struct universe* u) {
             node[index] = '\0';
             index = 0;
             // Allocate memory for next node
-            s->nodes = realloc(s->nodes, sizeof(int) * s->size + 1);
+            s->nodes = srealloc(s->nodes, sizeof(int) * s->size + 1);
 
             // Compares set node to universe node
             int max = u->size;
@@ -1375,8 +1375,8 @@ bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
             }
             r->size++;
             // Allocate memory for next node
-            r->nodes =
-                realloc(r->nodes, sizeof(struct relation_node) * (r->size + 1));
+            r->nodes = srealloc(r->nodes,
+                                sizeof(struct relation_node) * (r->size + 1));
         }
         // If character is EOF or newline we can end parsing
         if (c == EOF || c == '\n') {
