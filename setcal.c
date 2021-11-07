@@ -29,7 +29,7 @@
 
 enum store_node_type { UNIVERSE, SET, RELATION, COMMAND };
 
-enum function_input { IN_SET, IN_SET_SET, IN_SET_UNIVERZUM, IN_RELATION };
+enum function_input { IN_SET, IN_SET_SET, IN_SET_UNIVERSE, IN_RELATION, IN_RELATION_UNIVERSE};
 
 enum function_output { OUT_VOID, OUT_BOOL, OUT_SET, OUT_RELATION };
 
@@ -1131,14 +1131,58 @@ const struct command_def COMMAND_DEFS[] = {{.name = "empty",
                                             .function = set_equals,
                                             .input = IN_SET_SET,
                                             .output = OUT_BOOL},
+                                           {.name = "reflexive",
+                                            .function = relation_reflexive,
+                                            .input = IN_RELATION_UNIVERSE,
+                                            .output = OUT_BOOL},
+                                           {.name = "symmetric",
+                                            .function = relation_symmetric,
+                                            .input = IN_RELATION,
+                                            .output = OUT_BOOL},
+                                            {.name = "antisymmetric",
+                                            .function = relation_antisymmetric,
+                                            .input = IN_RELATION,
+                                            .output = OUT_BOOL},
+                                           {.name = "transitive",
+                                            .function = relation_transitive,
+                                            .input = IN_RELATION,
+                                            .output = OUT_BOOL},
+                                           {.name = "function",
+                                            .function = relation_function,
+                                            .input = IN_RELATION,
+                                            .output = OUT_BOOL},
+                                           {.name = "domain",
+                                            .function = relation_domain,
+                                            .input = IN_RELATION,
+                                            .output = OUT_SET},
                                            {.name = "codomain",
                                             .function = relation_codomain,
                                             .input = IN_RELATION,
                                             .output = OUT_SET},
-                                           {.name = "function",
-                                            .function = relation_function,
+                                           {.name = "injective",
+                                            .function = relation_injective,
                                             .input = IN_RELATION,
-                                            .output = OUT_BOOL}};
+                                            .output = OUT_BOOL},
+                                           {.name = "surjective",
+                                            .function = relation_surjective,
+                                            .input = IN_RELATION,
+                                            .output = OUT_BOOL},
+                                           {.name = "bijective",
+                                            .function = relation_bijective,
+                                            .input = IN_RELATION,
+                                            .output = OUT_BOOL},
+                                           {.name = "closure_ref",
+                                            .function = relation_closure_ref,
+                                            .input = IN_RELATION_UNIVERSE,
+                                            .output = OUT_RELATION},
+                                           {.name = "closure_sym",
+                                            .function = relation_closure_sym,
+                                            .input = IN_RELATION,
+                                            .output = OUT_RELATION},
+                                           {.name = "closure_trans",
+                                            .function = relation_closure_trans,
+                                            .input = IN_RELATION,
+                                            .output = OUT_RELATION}};
 
 /*------------------------------- STORE RUNNER ------------------------------*/
 
