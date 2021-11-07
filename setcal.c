@@ -516,7 +516,7 @@ struct set* set_minus(struct set* a, struct set* b) {
     if (minus == NULL) {
         return NULL;
     }
-    minus->nodes = malloc(sizeof(int));
+    minus->nodes = malloc(a->size * sizeof(int));
     if (minus->nodes == NULL) {
         return NULL;
     }
@@ -525,11 +525,6 @@ struct set* set_minus(struct set* a, struct set* b) {
     int i = 0, k = 0;
     while (i < a->size) {
         if (k > b->size || a->nodes[i] < b->nodes[k]) {
-            minus->nodes =
-                srealloc(minus->nodes, sizeof(int) * (minus->size + 1));
-            if (minus->nodes == NULL) {
-                return NULL;
-            }
             minus->nodes[minus->size++] = a->nodes[i++];
         } else if (a->nodes[i] == b->nodes[k]) {
             i++;
