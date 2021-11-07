@@ -406,11 +406,15 @@ struct set* set_complement(struct set* a, struct universe* u) {
     if (complement == NULL) {
         return NULL;
     }
-    complement->nodes = malloc((u->size * sizeof(int) - sizeof(a->nodes)));
+    complement->size = 0;
+    int size = (u->size - a->size) * sizeof(int);
+    if (size == 0) {
+        return complement;
+    }
+    complement->nodes = malloc(size);
     if (complement->nodes == NULL) {
         return NULL;
     }
-    complement->size = 0;
 
     int i = 0, k = 0;
     while (i < u->size) {
@@ -437,19 +441,18 @@ struct set* set_union(struct set* a, struct set* b) {
     if (s_union == NULL) {
         return NULL;
     }
-    s_union->nodes = malloc(sizeof(int));
+    s_union->size = 0;
+    int size = (a->size + b->size) * sizeof(int);
+    if (size == 0) {
+        return s_union;
+    }
+    s_union->nodes = malloc(size);
     if (s_union->nodes == NULL) {
         return NULL;
     }
-    s_union->size = 0;
 
     int i = 0, k = 0;
     while (i < a->size || k < b->size) {
-        s_union->nodes =
-            srealloc(s_union->nodes, sizeof(int) * (s_union->size + 1));
-        if (s_union->nodes == NULL) {
-            return NULL;
-        }
         if (i > a->size) {
             s_union->nodes[s_union->size] = b->nodes[k++];
         } else if (k > b->size) {
@@ -479,11 +482,15 @@ struct set* set_intersect(struct set* a, struct set* b) {
     if (intersect == NULL) {
         return NULL;
     }
-    intersect->nodes = malloc(sizeof(int));
+    intersect->size = 0;
+    int size = find_min(a->size, b->size) * sizeof(int);
+    if (size == 0) {
+        return intersect;
+    }
+    intersect->nodes = malloc(size);
     if (intersect->nodes == NULL) {
         return NULL;
     }
-    intersect->size = 0;
 
     int i = 0, k = 0;
     while (i < a->size && k < b->size) {
