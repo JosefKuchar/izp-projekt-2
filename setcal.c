@@ -318,30 +318,6 @@ void print_relation(struct relation* r, struct universe* u) {
     printf("\n");
 }
 
-/**
- * Print sotre
- * @param s Store
- */
-void print_store(struct store* s) {
-    for (int i = 0; i < s->size; i++) {
-        switch (s->nodes[i].type) {
-            case UNIVERSE:
-                print_universe(s->nodes[i].obj);
-                break;
-            case SET:
-                print_set(s->nodes[i].obj, s->nodes[0].obj);
-                break;
-            case RELATION:
-                print_relation(s->nodes[i].obj, s->nodes[0].obj);
-                break;
-            case COMMAND:
-                // TODO
-                printf("COMMAND\n");
-                break;
-        }
-    }
-}
-
 /*----------------------------- HELPER FUNCTIONS ----------------------------*/
 
 /**
@@ -379,6 +355,15 @@ int get_min(int a, int b) {
  */
 int get_max(int a, int b) {
     return a > b ? a : b;
+}
+
+/**
+ * Get universe from store
+ * @param store Store
+ * @return Pointer to universe
+ */
+struct universe* get_universe(struct store* store) {
+    return store->nodes[0].obj;
 }
 
 /*------------------------------ SET FUNCTIONS ------------------------------*/
@@ -1129,6 +1114,92 @@ const struct command_def COMMAND_DEFS[] = {
 /*------------------------------- STORE RUNNER ------------------------------*/
 
 /**
+ * Function for procesing bool ouput
+ * @param r Result - bool
+ * @return True if no error occured
+ */
+bool process_output_bool(bool r) {
+    // Print the actual bool
+    print_bool(r);
+
+    // Handle jumping by modifying program counter
+    if (!r) {
+        // TODO jumping
+    }
+    return true;
+}
+
+/**
+ * Function for processing set output
+ * @param s Store
+ * @param r Result - relation
+ * @param i Program counter
+ * @return True if no error occured
+ */
+bool process_output_relation(struct store* s, struct relation* r, int i) {
+    // Check if function actually returned valid object
+    if (r == NULL) {
+        return false;
+    }
+
+    // Print the actual relation
+    print_relation(r, get_universe(s));
+
+    // Replace command with actual relation in store
+    free_command(s->nodes[i].obj);
+    s->nodes[i].type = RELATION;
+    s->nodes[i].obj = r;
+
+    return true;
+}
+
+/**
+ * Function for processing set output
+ * @param s Store
+ * @param r Result - set
+ * @param i Program counter
+ * @return True if no error occured
+ */
+bool process_output_set(struct store* s, struct set* r, int i) {
+    // Check if function acutally returned valid object
+    if (r == NULL) {
+        return false;
+    }
+
+    // Print the actual set
+    print_set(r, get_universe(s));
+
+    // Replace command with actual set in store
+    free_command(s->nodes[i].obj);
+    s->nodes[i].type = SET;
+    s->nodes[i].obj = r;
+
+    return true;
+}
+
+/**
+ * Function for processing function output
+ * @param s Store
+ * @param r Result
+ * @param i Program counter
+ * @param o Function output type
+ * @return True if no error occured
+ */
+bool process_output(struct store* s, void* r, int* i, enum function_output o) {
+    switch (o) {
+        case OUT_SET:;
+            return process_output_set(s, r, *i);
+        case OUT_RELATION:;
+            return process_output_relation(s, r, *i);
+        case OUT_BOOL:;
+            return process_output_bool(r);
+        case OUT_VOID:
+            return true;
+    }
+    return true;
+}
+
+/**
  * Function for running commands
  * @param command Command
  * @param store Store
@@ -1154,7 +1225,7 @@ bool run_command(struct command* command, struct store* store, int* i) {
         case IN_SET_UNIVERSE:;
             void* (*f_s_u)(struct set*, struct universe*) = def.function;
             result = f_s_u(store->nodes[command->args[0] - 1].obj,
-                           store->nodes[0].obj);
+                           get_universe(store));
             break;
         case IN_RELATION:;
             void* (*f_r)(struct relation*) = def.function;
@@ -1163,48 +1234,12 @@ bool run_command(struct command* command, struct store* store, int* i) {
         case IN_RELATION_UNIVERSE:;
             void* (*f_r_u)(struct relation*, struct universe*) = def.function;
             result = f_r_u(store->nodes[command->args[0] - 1].obj,
-                           store->nodes[0].obj);
-            break;
-        default:
-            printf("This input is not implemented yet!\n");
-            return true;  // True so it doesn't end
-    }
-
-    switch (def.output) {
-        case OUT_SET:;
-            if (result == NULL) {
-                return false;
-            }
-            struct set* set = result;
-            print_set(set, store->nodes[0].obj);
-            // Replace command with actual set in store
-            free_command(store->nodes[*i].obj);
-            store->nodes[*i].type = SET;
-            store->nodes[*i].obj = result;
-            break;
-        case OUT_RELATION:;
-            if (result == NULL) {
-                return false;
-            }
-            struct relation* relation = result;
-            print_relation(relation, store->nodes[0].obj);
-            // Replace command with actual relation in store
-            free_command(store->nodes[*i].obj);
-            store->nodes[*i].type = RELATION;
-            store->nodes[*i].obj = result;
-            break;
-        case OUT_BOOL:;
-            bool b = result;
-            print_bool(b);
-            if (!b) {
-                // TODO jumping
-            }
-            break;
-        case OUT_VOID:
+                           get_universe(store));
             break;
     }
 
-    return true;
+    // Process function output
+    return process_output(store, result, i, def.output);
 }
 
 /**
@@ -1219,10 +1254,10 @@ bool store_runner(struct store* store) {
                 print_universe(store->nodes[i].obj);
                 break;
             case SET:
-                print_set(store->nodes[i].obj, store->nodes[0].obj);
+                print_set(store->nodes[i].obj, get_universe(store));
                 break;
             case RELATION:
-                print_relation(store->nodes[i].obj, store->nodes[0].obj);
+                print_relation(store->nodes[i].obj, get_universe(store));
                 break;
             case COMMAND:
                 // Command can modify program counter
@@ -1531,7 +1566,7 @@ bool process_set(FILE* fp, struct store* store, bool empty) {
     }
 
     // Handle parsing
-    if (!parse_set(fp, store->nodes[index].obj, store->nodes[0].obj)) {
+    if (!parse_set(fp, store->nodes[index].obj, get_universe(store))) {
         fprintf(stderr, "Error parsing set!\n");
         return false;
     }
@@ -1564,7 +1599,7 @@ bool process_relation(FILE* fp, struct store* store, bool empty) {
     }
 
     // Parse relation
-    if (!parse_relation(fp, store->nodes[index].obj, store->nodes[0].obj)) {
+    if (!parse_relation(fp, store->nodes[index].obj, get_universe(store))) {
         fprintf(stderr, "Error parsing relation!\n");
         return false;
     }
