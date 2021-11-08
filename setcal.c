@@ -1209,6 +1209,20 @@ bool run_command(struct command* command, struct store* store, int* i) {
             result = func(store->nodes[command->args[0] - 1].obj,
                           store->nodes[command->args[1] - 1].obj);
             break;
+        case IN_SET_UNIVERSE:;
+            void* (*f_s_u)(struct set*, struct universe*) = def.function;
+            result = f_s_u(store->nodes[command->args[0] - 1].obj,
+                           store->nodes[0].obj);
+            break;
+        case IN_RELATION:;
+            void* (*f_r)(struct relation*) = def.function;
+            result = f_r(store->nodes[command->args[0] - 1].obj);
+            break;
+        case IN_RELATION_UNIVERSE:;
+            void* (*f_r_u)(struct relation*, struct universe*) = def.function;
+            result = f_r_u(store->nodes[command->args[0] - 1].obj,
+                           store->nodes[0].obj);
+            break;
         default:
             printf("This input is not implemented yet!\n");
             return true;  // True so it doesn't end
