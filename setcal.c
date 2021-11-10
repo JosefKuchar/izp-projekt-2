@@ -225,6 +225,12 @@ bool relation_valid(struct relation* r) {
 bool command_arguments_valid(struct command* command, struct store* store, struct command_def def){
     bool valid;
 
+    // Argument points to non-existant line
+    if(store->size >= (command->args[0] + command->argc - 1)){
+        return false;
+    }
+
+    // Check if argument types match input types
     switch (def.input) {
         case IN_SET:;
             valid = (command->argc == 1) && 
