@@ -1248,6 +1248,31 @@ bool process_output_set(struct store* s, struct set* r, int i) {
     return true;
 }
 
+void* process_function_input(struct store* s,
+                             struct command* c,
+                             struct command_def def) {
+    switch (def.input) {
+        case IN_SET:;
+            void* (*f_s)(struct set*) = def.function;
+            return f_s(s->nodes[c->args[0] - 1].obj);
+        case IN_SET_SET:;
+            void* (*f_s_s)(struct set*, struct set*) = def.function;
+            return f_s_s(s->nodes[c->args[0] - 1].obj,
+                         s->nodes[c->args[1] - 1].obj);
+        case IN_SET_UNIVERSE:;
+            void* (*f_s_u)(struct set*, struct universe*) = def.function;
+            return f_s_u(s->nodes[c->args[0] - 1].obj, get_universe(s));
+        case IN_RELATION:;
+            void* (*f_r)(struct relation*) = def.function;
+            return f_r(s->nodes[c->args[0] - 1].obj);
+        case IN_RELATION_UNIVERSE:;
+            void* (*f_r_u)(struct relation*, struct universe*) = def.function;
+            return f_r_u(s->nodes[c->args[0] - 1].obj, get_universe(s));
+        default:
+            return NULL;
+    }
+}
+
 /**
  * Function for running commands
  * @param command Command
@@ -1262,33 +1287,7 @@ bool run_command(struct command* command, struct store* store, int* i) {
         return false;
     }
 
-    void* result;
-
-    switch (def.input) {
-        case IN_SET:;
-            void* (*f_s)(struct set*) = def.function;
-            result = f_s(store->nodes[command->args[0] - 1].obj);
-            break;
-        case IN_SET_SET:;
-            void* (*f_s_s)(struct set*, struct set*) = def.function;
-            result = f_s_s(store->nodes[command->args[0] - 1].obj,
-                           store->nodes[command->args[1] - 1].obj);
-            break;
-        case IN_SET_UNIVERSE:;
-            void* (*f_s_u)(struct set*, struct universe*) = def.function;
-            result = f_s_u(store->nodes[command->args[0] - 1].obj,
-                           get_universe(store));
-            break;
-        case IN_RELATION:;
-            void* (*f_r)(struct relation*) = def.function;
-            result = f_r(store->nodes[command->args[0] - 1].obj);
-            break;
-        case IN_RELATION_UNIVERSE:;
-            void* (*f_r_u)(struct relation*, struct universe*) = def.function;
-            result = f_r_u(store->nodes[command->args[0] - 1].obj,
-                           get_universe(store));
-            break;
-    }
+    void* result = process_function_input(store, command, def);
 
     switch (def.output) {
         case OUT_SET:;
