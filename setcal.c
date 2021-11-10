@@ -222,12 +222,14 @@ bool relation_valid(struct relation* r) {
     return true;
 }
 
-bool command_arguments_valid(struct command* command, struct store* store, struct command_def def){
+bool command_arguments_valid(struct command* command,
+                             struct store* store,
+                             struct command_def def) {
     bool valid;
 
     // Argument points to non-existant line
-    for(int i = 0; i < command->argc; i++){
-        if (store->size < command->args[i]){
+    for (int i = 0; i < command->argc; i++) {
+        if (store->size < command->args[i]) {
             return false;
         }
     }
@@ -236,25 +238,25 @@ bool command_arguments_valid(struct command* command, struct store* store, struc
     // Optional argument N (line number) can be the last argument
     switch (def.input) {
         case IN_SET:;
-            valid = (command->argc == 1 || command->argc == 2) && 
-                         (store->nodes[command->args[0] - 1].type == SET);
+            valid = (command->argc == 1 || command->argc == 2) &&
+                    (store->nodes[command->args[0] - 1].type == SET);
             break;
         case IN_SET_SET:;
-            valid = (command->argc == 2 || command->argc == 3) && 
-                         (store->nodes[command->args[0] - 1].type == SET) &&
-                         (store->nodes[command->args[1] - 1].type == SET);
+            valid = (command->argc == 2 || command->argc == 3) &&
+                    (store->nodes[command->args[0] - 1].type == SET) &&
+                    (store->nodes[command->args[1] - 1].type == SET);
             break;
         case IN_SET_UNIVERSE:;
-            valid = (command->argc == 1 || command->argc == 2) && 
-                         (store->nodes[command->args[0] - 1].type == SET);
+            valid = (command->argc == 1 || command->argc == 2) &&
+                    (store->nodes[command->args[0] - 1].type == SET);
             break;
         case IN_RELATION:;
-            valid = (command->argc == 1 || command->argc == 2) && 
-                         (store->nodes[command->args[0] - 1].type == RELATION);
+            valid = (command->argc == 1 || command->argc == 2) &&
+                    (store->nodes[command->args[0] - 1].type == RELATION);
             break;
         case IN_RELATION_UNIVERSE:;
-            valid = (command->argc == 1 || command->argc == 2) && 
-                         (store->nodes[command->args[0] - 1].type == RELATION);
+            valid = (command->argc == 1 || command->argc == 2) &&
+                    (store->nodes[command->args[0] - 1].type == RELATION);
             break;
     }
 
@@ -1153,17 +1155,47 @@ const struct command_def COMMAND_DEFS[] = {
 /*------------------------------- STORE RUNNER ------------------------------*/
 
 /**
+ * Get number of arguments from input type
+ * @param input_type Input type
+ * @return Number of arguments
+ */
+int get_argument_count(enum function_input input_type) {
+    switch (input_type) {
+        case IN_SET:
+            return 1;
+        case IN_SET_UNIVERSE:
+            return 1;
+        case IN_RELATION:
+            return 1;
+        case IN_RELATION_UNIVERSE:
+            return 1;
+        case IN_SET_SET:
+            return 2;
+    }
+    return 1;
+}
+
+/**
  * Function for procesing bool ouput
  * @param r Result - bool
  * @return True if no error occured
  */
-bool process_output_bool(bool r) {
+bool process_output_bool(bool r,
+                         enum function_input input,
+                         struct command* command,
+                         int* i) {
     // Print the actual bool
     print_bool(r);
 
     // Handle jumping by modifying program counter
     if (!r) {
-        // TODO jumping
+        int arg_count = get_argument_count(input);
+
+        // Jump
+        if (arg_count < command->argc) {
+            // Use last argument as new program counter location
+            *i = command->args[command->argc - 1] - 1;
+        }
     }
     return true;
 }
@@ -1217,28 +1249,6 @@ bool process_output_set(struct store* s, struct set* r, int i) {
 }
 
 /**
- * Function for processing function output
- * @param s Store
- * @param r Result
- * @param i Program counter
- * @param o Function output type
- * @return True if no error occured
- */
-bool process_output(struct store* s, void* r, int* i, enum function_output o) {
-    switch (o) {
-        case OUT_SET:;
-            return process_output_set(s, r, *i);
-        case OUT_RELATION:;
-            return process_output_relation(s, r, *i);
-        case OUT_BOOL:;
-            return process_output_bool(r);
-        case OUT_VOID:
-            return true;
-    }
-    return true;
-}
-
-/**
  * Function for running commands
  * @param command Command
  * @param store Store
@@ -1246,8 +1256,8 @@ bool process_output(struct store* s, void* r, int* i, enum function_output o) {
  */
 bool run_command(struct command* command, struct store* store, int* i) {
     struct command_def def = COMMAND_DEFS[command->type];
-    
-    if(!command_arguments_valid(command, store, def)){
+
+    if (!command_arguments_valid(command, store, def)) {
         fprintf(stderr, "Invalid command arguments!\n");
         return false;
     }
@@ -1280,8 +1290,17 @@ bool run_command(struct command* command, struct store* store, int* i) {
             break;
     }
 
-    // Process function output
-    return process_output(store, result, i, def.output);
+    switch (def.output) {
+        case OUT_SET:;
+            return process_output_set(store, result, *i);
+        case OUT_RELATION:;
+            return process_output_relation(store, result, *i);
+        case OUT_BOOL:;
+            return process_output_bool(result, def.input, command, i);
+        case OUT_VOID:
+            return true;
+    }
+    return true;
 }
 
 /**
