@@ -225,7 +225,7 @@ bool relation_valid(struct relation* r) {
 bool command_arguments_valid(struct command* command,
                              struct store* store,
                              struct command_def def) {
-    bool valid;
+    bool valid = false;
 
     // Argument points to non-existant line
     for (int i = 0; i < command->argc; i++) {
@@ -238,25 +238,27 @@ bool command_arguments_valid(struct command* command,
     // Optional argument N (line number) can be the last argument
     switch (def.input) {
         case IN_SET:;
-            valid = (command->argc == 1 || command->argc == 2) &&
-                    (store->nodes[command->args[0] - 1].type == SET);
+        case IN_SET_UNIVERSE:;
+            valid = (command->argc == 1 &&
+                     store->nodes[command->args[0] - 1].type == SET) ||
+                    (command->argc == 2 && def.output == OUT_BOOL &&
+                     store->nodes[command->args[0] - 1].type == SET);
             break;
         case IN_SET_SET:;
-            valid = (command->argc == 2 || command->argc == 3) &&
-                    (store->nodes[command->args[0] - 1].type == SET) &&
-                    (store->nodes[command->args[1] - 1].type == SET);
-            break;
-        case IN_SET_UNIVERSE:;
-            valid = (command->argc == 1 || command->argc == 2) &&
-                    (store->nodes[command->args[0] - 1].type == SET);
+            valid = (command->argc == 2 &&
+                     store->nodes[command->args[0] - 1].type == SET &&
+                     store->nodes[command->args[1] - 1].type == SET) ||
+                    (command->argc == 3 &&
+                     store->nodes[command->args[0] - 1].type == SET &&
+                     store->nodes[command->args[1] - 1].type == SET &&
+                     def.output == OUT_BOOL);
             break;
         case IN_RELATION:;
-            valid = (command->argc == 1 || command->argc == 2) &&
-                    (store->nodes[command->args[0] - 1].type == RELATION);
-            break;
         case IN_RELATION_UNIVERSE:;
-            valid = (command->argc == 1 || command->argc == 2) &&
-                    (store->nodes[command->args[0] - 1].type == RELATION);
+            valid = (command->argc == 1 &&
+                     store->nodes[command->args[0] - 1].type == RELATION) ||
+                    (command->argc == 2 && def.output == OUT_BOOL &&
+                     store->nodes[command->args[0] - 1].type == RELATION);
             break;
     }
 
@@ -1528,6 +1530,7 @@ bool parse_command(FILE* fp, struct command* command) {
     char buffer[STRING_BUFFER_SIZE] = {0};
     int index = 0;
     int argument = 0;
+    command->argc = 0;
 
     while (true) {
         int c = getc(fp);
