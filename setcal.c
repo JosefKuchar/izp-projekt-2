@@ -222,6 +222,36 @@ bool relation_valid(struct relation* r) {
     return true;
 }
 
+bool command_arguments_valid(struct command* command, struct store* store, struct command_def def){
+    bool valid;
+
+    switch (def.input) {
+        case IN_SET:;
+            valid = (command->argc == 1) && 
+                         (store->nodes[command->args[0] - 1].type == SET);
+            break;
+        case IN_SET_SET:;
+            valid = (command->argc == 2) && 
+                         (store->nodes[command->args[0] - 1].type == SET) &&
+                         (store->nodes[command->args[0] - 1].type == SET);
+            break;
+        case IN_SET_UNIVERSE:;
+            valid = (command->argc == 1) && 
+                         (store->nodes[command->args[0] - 1].type == SET);
+            break;
+        case IN_RELATION:;
+            valid = (command->argc == 1) && 
+                         (store->nodes[command->args[0] - 1].type == RELATION);
+            break;
+        case IN_RELATION_UNIVERSE:;
+            valid = (command->argc == 1) && 
+                         (store->nodes[command->args[0] - 1].type == RELATION);
+            break;
+    }
+
+    return valid;
+}
+
 /**
  * Check if store is valid (correct order of node types)
  * @param store Store
@@ -1207,65 +1237,34 @@ bool process_output(struct store* s, void* r, int* i, enum function_output o) {
  */
 bool run_command(struct command* command, struct store* store, int* i) {
     struct command_def def = COMMAND_DEFS[command->type];
+    
+    if(!command_arguments_valid(command, store, def)){
+        fprintf(stderr, "Invalid command arguments!\n");
+        return false;
+    }
 
-    bool valid_args;
     void* result;
 
     switch (def.input) {
         case IN_SET:;
-            valid_args = (command->argc == 1) && 
-                         (store->nodes[command->args[0] - 1].type == SET);
-            if(!valid_args){
-                fprintf(stderr, "Invalid command arguments!\n");
-                return false;
-            }
-
             void* (*f_s)(struct set*) = def.function;
             result = f_s(store->nodes[command->args[0] - 1].obj);
             break;
         case IN_SET_SET:;
-            valid_args = (command->argc == 2) && 
-                         (store->nodes[command->args[0] - 1].type == SET) &&
-                         (store->nodes[command->args[0] - 1].type == SET);
-            if(!valid_args){
-                fprintf(stderr, "Invalid command arguments!\n");
-                return false;
-            }
-
             void* (*f_s_s)(struct set*, struct set*) = def.function;
             result = f_s_s(store->nodes[command->args[0] - 1].obj,
                            store->nodes[command->args[1] - 1].obj);
             break;
         case IN_SET_UNIVERSE:;
-            valid_args = (command->argc == 1) && 
-                         (store->nodes[command->args[0] - 1].type == SET);
-            if(!valid_args){
-                fprintf(stderr, "Invalid command arguments!\n");
-                return false;
-            }
-            
             void* (*f_s_u)(struct set*, struct universe*) = def.function;
             result = f_s_u(store->nodes[command->args[0] - 1].obj,
                            get_universe(store));
             break;
         case IN_RELATION:;
-            valid_args = (command->argc == 1) && 
-                         (store->nodes[command->args[0] - 1].type == RELATION);
-            if(!valid_args){
-                fprintf(stderr, "Invalid command arguments!\n");
-                return false;
-            }
-
             void* (*f_r)(struct relation*) = def.function;
             result = f_r(store->nodes[command->args[0] - 1].obj);
             break;
         case IN_RELATION_UNIVERSE:;
-            valid_args = (command->argc == 1) && 
-                         (store->nodes[command->args[0] - 1].type == RELATION);
-            if(!valid_args){
-                fprintf(stderr, "Invalid command arguments!\n");
-                return false;
-            }
             void* (*f_r_u)(struct relation*, struct universe*) = def.function;
             result = f_r_u(store->nodes[command->args[0] - 1].obj,
                            get_universe(store));
