@@ -140,6 +140,75 @@ void relation_sort(struct relation* r) {
     qsort(r->nodes, r->size, sizeof(struct relation_node), compare_rel_nodes);
 }
 
+/*----------------------------- HELPER FUNCTIONS ----------------------------*/
+
+/**
+ * Realloc that automatically frees old block when fails
+ * @param block Exisiting memory block
+ * @param size New size
+ * @return Pointer to newly allocated memory, NULL when fails
+ */
+void* srealloc(void* block, size_t size) {
+    void* new = realloc(block, size);
+    // Check if relloc failed
+    if (new == NULL) {
+        // Free old block
+        free(block);
+        return NULL;
+    }
+    return new;
+}
+
+/**
+ * Find minimum of two numbers (integers)
+ * @param a First number
+ * @param b Second number
+ * @return Minimum of two numbers
+ */
+int get_min(int a, int b) {
+    return a > b ? b : a;
+}
+
+/**
+ * Find maximum of two numbers (integers)
+ * @param a First number
+ * @param b Second number
+ * @return Maximum of two numbers
+ */
+int get_max(int a, int b) {
+    return a > b ? a : b;
+}
+
+/**
+ * Get universe from store
+ * @param store Store
+ * @return Pointer to universe
+ */
+struct universe* get_universe(struct store* store) {
+    return store->nodes[0].obj;
+}
+
+/**
+ * Get number of arguments from input type
+ * @param input_type Input type
+ * @return Number of arguments
+ */
+int get_argument_count(enum function_input input_type) {
+    switch (input_type) {
+        case IN_SET:
+            return 1;
+        case IN_SET_UNIVERSE:
+            return 1;
+        case IN_RELATION:
+            return 1;
+        case IN_RELATION_UNIVERSE:
+            return 1;
+        case IN_SET_SET:
+            return 2;
+    }
+    return 1;
+}
+
 /*------------------------------- VALIDATIONS -------------------------------*/
 
 /**
@@ -225,8 +294,6 @@ bool relation_valid(struct relation* r) {
 bool command_arguments_valid(struct command* command,
                              struct store* store,
                              struct command_def def) {
-    bool valid = false;
-
     // Argument points to non-existant line
     for (int i = 0; i < command->argc; i++) {
         if (store->size < command->args[i]) {
@@ -234,35 +301,35 @@ bool command_arguments_valid(struct command* command,
         }
     }
 
-    // Check if argument types match input types
-    // Optional argument N (line number) can be the last argument
-    switch (def.input) {
-        case IN_SET:;
-        case IN_SET_UNIVERSE:;
-            valid = (command->argc == 1 &&
-                     store->nodes[command->args[0] - 1].type == SET) ||
-                    (command->argc == 2 && def.output == OUT_BOOL &&
-                     store->nodes[command->args[0] - 1].type == SET);
-            break;
-        case IN_SET_SET:;
-            valid = (command->argc == 2 &&
-                     store->nodes[command->args[0] - 1].type == SET &&
-                     store->nodes[command->args[1] - 1].type == SET) ||
-                    (command->argc == 3 &&
-                     store->nodes[command->args[0] - 1].type == SET &&
-                     store->nodes[command->args[1] - 1].type == SET &&
-                     def.output == OUT_BOOL);
-            break;
-        case IN_RELATION:;
-        case IN_RELATION_UNIVERSE:;
-            valid = (command->argc == 1 &&
-                     store->nodes[command->args[0] - 1].type == RELATION) ||
-                    (command->argc == 2 && def.output == OUT_BOOL &&
-                     store->nodes[command->args[0] - 1].type == RELATION);
-            break;
+    // Check argument count
+    int argument_count = get_argument_count(def.input);
+    if (def.output == OUT_BOOL) {
+        if (command->argc != argument_count &&
+            command->argc != argument_count + 1) {
+            return false;
+        }
+    } else {
+        if (command->argc != argument_count) {
+            return false;
+        }
     }
 
-    return valid;
+    // Check if argument types match input types
+    switch (def.input) {
+        case IN_SET:
+            return store->nodes[command->args[0] - 1].type == SET;
+        case IN_SET_UNIVERSE:
+            return store->nodes[command->args[0] - 1].type == SET;
+        case IN_SET_SET:
+            return store->nodes[command->args[0] - 1].type == SET &&
+                   store->nodes[command->args[1] - 1].type == SET;
+        case IN_RELATION:
+            return store->nodes[command->args[0] - 1].type == RELATION;
+        case IN_RELATION_UNIVERSE:
+            return store->nodes[command->args[0] - 1].type == RELATION;
+    }
+
+    return true;
 }
 
 /**
@@ -359,54 +426,6 @@ void print_relation(struct relation* r, struct universe* u) {
         printf(" (%s %s)", u->nodes[r->nodes[i].a], u->nodes[r->nodes[i].b]);
     }
     printf("\n");
-}
-
-/*----------------------------- HELPER FUNCTIONS ----------------------------*/
-
-/**
- * Realloc that automatically frees old block when fails
- * @param block Exisiting memory block
- * @param size New size
- * @return Pointer to newly allocated memory, NULL when fails
- */
-void* srealloc(void* block, size_t size) {
-    void* new = realloc(block, size);
-    // Check if relloc failed
-    if (new == NULL) {
-        // Free old block
-        free(block);
-        return NULL;
-    }
-    return new;
-}
-
-/**
- * Find minimum of two numbers (integers)
- * @param a First number
- * @param b Second number
- * @return Minimum of two numbers
- */
-int get_min(int a, int b) {
-    return a > b ? b : a;
-}
-
-/**
- * Find maximum of two numbers (integers)
- * @param a First number
- * @param b Second number
- * @return Maximum of two numbers
- */
-int get_max(int a, int b) {
-    return a > b ? a : b;
-}
-
-/**
- * Get universe from store
- * @param store Store
- * @return Pointer to universe
- */
-struct universe* get_universe(struct store* store) {
-    return store->nodes[0].obj;
 }
 
 /*------------------------------ SET FUNCTIONS ------------------------------*/
@@ -1155,27 +1174,6 @@ const struct command_def COMMAND_DEFS[] = {
     {"closure_trans", relation_closure_trans, IN_RELATION, OUT_RELATION}};
 
 /*------------------------------- STORE RUNNER ------------------------------*/
-
-/**
- * Get number of arguments from input type
- * @param input_type Input type
- * @return Number of arguments
- */
-int get_argument_count(enum function_input input_type) {
-    switch (input_type) {
-        case IN_SET:
-            return 1;
-        case IN_SET_UNIVERSE:
-            return 1;
-        case IN_RELATION:
-            return 1;
-        case IN_RELATION_UNIVERSE:
-            return 1;
-        case IN_SET_SET:
-            return 2;
-    }
-    return 1;
-}
 
 /**
  * Function for procesing bool ouput
