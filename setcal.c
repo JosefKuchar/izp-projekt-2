@@ -226,8 +226,10 @@ bool command_arguments_valid(struct command* command, struct store* store, struc
     bool valid;
 
     // Argument points to non-existant line
-    if(store->size >= (command->args[0] + command->argc - 1)){
-        return false;
+    for(int i = 0; i < command->argc; i++){
+        if (store->size < command->args[i]){
+            return false;
+        }
     }
 
     // Check if argument types match input types
@@ -239,7 +241,7 @@ bool command_arguments_valid(struct command* command, struct store* store, struc
         case IN_SET_SET:;
             valid = (command->argc == 2) && 
                          (store->nodes[command->args[0] - 1].type == SET) &&
-                         (store->nodes[command->args[0] - 1].type == SET);
+                         (store->nodes[command->args[1] - 1].type == SET);
             break;
         case IN_SET_UNIVERSE:;
             valid = (command->argc == 1) && 
