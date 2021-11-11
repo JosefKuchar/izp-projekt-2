@@ -1152,7 +1152,7 @@ const struct command_def COMMAND_DEFS[] = {
     // Function name, function pointer, input, output
     {"empty", set_empty, IN_SET, OUT_BOOL},
     {"card", set_card, IN_SET, OUT_VOID},
-    {"complement", set_complement, IN_SET, OUT_SET},
+    {"complement", set_complement, IN_SET_UNIVERSE, OUT_SET},
     {"union", set_union, IN_SET_SET, OUT_SET},
     {"intersect", set_intersect, IN_SET_SET, OUT_SET},
     {"minus", set_minus, IN_SET_SET, OUT_SET},
