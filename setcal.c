@@ -471,14 +471,22 @@ struct set* set_complement(struct set* a, struct universe* u) {
     }
 
     int i = 0, k = 0;
-    while (i < u->size) {
-        if (i == a->nodes[k]) {
-            k++;
+    // If given set is empty, make a copy of universe
+    if(a->size > 0){
+        while (i < u->size) {
+            if (i == a->nodes[k]) {
+                k++;
+                i++;
+                continue;
+            }
+            complement->nodes[complement->size++] = i;
             i++;
-            continue;
         }
-        complement->nodes[complement->size++] = i;
-        i++;
+    }else{
+        for (int i = 0; i < u->size; i++){
+            complement->nodes[i] = i;
+            complement->size++;
+        }
     }
     return complement;
 }
