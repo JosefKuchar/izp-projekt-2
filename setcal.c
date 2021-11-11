@@ -513,6 +513,22 @@ struct set* set_union(struct set* a, struct set* b) {
         free(s_union);
         return NULL;
     }
+    
+    if (a->size == 0){
+        for (int i = 0; i < b->size; i++)
+        {
+            s_union->nodes[i] = b->nodes[i];
+            s_union->size++;
+        }
+        return s_union;
+    }else if (b->size == 0){
+        for (int i = 0; i < a->size; i++)
+        {
+            s_union->nodes[i] = a->nodes[i];
+            s_union->size++;
+        }
+        return s_union;
+    }
 
     int i = 0, k = 0;
     while (i < a->size || k < b->size) {
