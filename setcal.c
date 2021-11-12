@@ -472,7 +472,7 @@ struct set* set_complement(struct set* a, struct universe* u) {
 
     int i = 0, k = 0;
     // If given set is empty, make a copy of universe
-    if(a->size > 0){
+    if (a->size > 0) {
         while (i < u->size) {
             if (i == a->nodes[k]) {
                 k++;
@@ -482,8 +482,8 @@ struct set* set_complement(struct set* a, struct universe* u) {
             complement->nodes[complement->size++] = i;
             i++;
         }
-    }else{
-        for (int i = 0; i < u->size; i++){
+    } else {
+        for (int i = 0; i < u->size; i++) {
             complement->nodes[i] = i;
             complement->size++;
         }
@@ -513,17 +513,15 @@ struct set* set_union(struct set* a, struct set* b) {
         free(s_union);
         return NULL;
     }
-    
-    if (a->size == 0){
-        for (int i = 0; i < b->size; i++)
-        {
+
+    if (a->size == 0) {
+        for (int i = 0; i < b->size; i++) {
             s_union->nodes[i] = b->nodes[i];
             s_union->size++;
         }
         return s_union;
-    }else if (b->size == 0){
-        for (int i = 0; i < a->size; i++)
-        {
+    } else if (b->size == 0) {
+        for (int i = 0; i < a->size; i++) {
             s_union->nodes[i] = a->nodes[i];
             s_union->size++;
         }
@@ -1276,7 +1274,7 @@ void* process_function_input(struct store* s,
                              struct command* c,
                              struct command_def def) {
     switch (def.input) {
-        case IN_SET:;
+        case IN_SET:
             void* (*f_s)(struct set*) = def.function;
             return f_s(s->nodes[c->args[0] - 1].obj);
         case IN_SET_SET:;
