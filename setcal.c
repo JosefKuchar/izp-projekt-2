@@ -607,6 +607,15 @@ struct set* set_minus(struct set* a, struct set* b) {
         return NULL;
     }
 
+    if (b->size == 0){
+        for (int i = 0; i < a->size; i++){
+            minus->nodes[i] = a->nodes[i];
+            minus->size++;
+        }
+
+        return minus;
+    }
+
     int i = 0, k = 0;
     while (i < a->size) {
         if (k > b->size || a->nodes[i] < b->nodes[k]) {
@@ -1274,7 +1283,7 @@ void* process_function_input(struct store* s,
                              struct command* c,
                              struct command_def def) {
     switch (def.input) {
-        case IN_SET:
+        case IN_SET:;
             void* (*f_s)(struct set*) = def.function;
             return f_s(s->nodes[c->args[0] - 1].obj);
         case IN_SET_SET:;
