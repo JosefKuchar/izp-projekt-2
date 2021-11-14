@@ -797,8 +797,11 @@ struct set* relation_domain(struct relation* r) {
     if (domain->nodes == NULL) {
         return NULL;
     }
-    domain->size = 0;
-    domain->nodes[domain->size++] = r->nodes[0].a;
+
+    if (r->size > 0){
+        domain->size = 0;
+        domain->nodes[domain->size++] = r->nodes[0].a;
+    }
     for (int i = 1; i < r->size; i++) {
         if (r->nodes[i].a != r->nodes[i - 1].a) {
             domain->nodes =
