@@ -507,6 +507,7 @@ struct set* set_union(struct set* a, struct set* b) {
     s_union->size = 0;
     int size = (a->size + b->size) * sizeof(int);
     if (size == 0) {
+        s_union->nodes = NULL;
         return s_union;
     }
     s_union->nodes = malloc(size);
@@ -563,6 +564,7 @@ struct set* set_intersect(struct set* a, struct set* b) {
     intersect->size = 0;
     int size = get_min(a->size, b->size) * sizeof(int);
     if (size == 0) {
+        intersect->nodes = NULL;
         return intersect;
     }
     intersect->nodes = malloc(size);
@@ -600,6 +602,7 @@ struct set* set_minus(struct set* a, struct set* b) {
     minus->size = 0;
     int size = a->size * sizeof(int);
     if (size == 0) {
+        minus->nodes = NULL;
         return minus;
     }
     minus->nodes = malloc(size);
@@ -796,6 +799,7 @@ struct set* relation_domain(struct relation* r) {
     }
     domain->nodes = malloc(sizeof(int));
     if (domain->nodes == NULL) {
+        free(domain);
         return NULL;
     }
 
