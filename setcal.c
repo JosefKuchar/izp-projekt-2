@@ -462,6 +462,7 @@ struct set* set_complement(struct set* a, struct universe* u) {
     complement->size = 0;
     int size = (u->size - a->size) * sizeof(int);
     if (size == 0) {
+        complement->nodes = NULL;
         return complement;
     }
     complement->nodes = malloc(size);
@@ -607,8 +608,8 @@ struct set* set_minus(struct set* a, struct set* b) {
         return NULL;
     }
 
-    if (b->size == 0){
-        for (int i = 0; i < a->size; i++){
+    if (b->size == 0) {
+        for (int i = 0; i < a->size; i++) {
             minus->nodes[i] = a->nodes[i];
             minus->size++;
         }
@@ -798,7 +799,7 @@ struct set* relation_domain(struct relation* r) {
         return NULL;
     }
 
-    if (r->size > 0){
+    if (r->size > 0) {
         domain->size = 0;
         domain->nodes[domain->size++] = r->nodes[0].a;
     }
