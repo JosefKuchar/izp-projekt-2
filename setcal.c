@@ -516,6 +516,7 @@ struct set* set_union(struct set* a, struct set* b) {
         return NULL;
     }
 
+    // If one of parameter sets is empty, copy other set    
     if (a->size == 0) {
         for (int i = 0; i < b->size; i++) {
             s_union->nodes[i] = b->nodes[i];
@@ -530,22 +531,28 @@ struct set* set_union(struct set* a, struct set* b) {
         return s_union;
     }
 
-    int i = 0, k = 0;
-    while (i < a->size || k < b->size) {
-        if (i > a->size) {
-            s_union->nodes[s_union->size] = b->nodes[k++];
-        } else if (k > b->size) {
-            s_union->nodes[s_union->size] = a->nodes[i++];
-        } else if (a->nodes[i] < b->nodes[k]) {
-            s_union->nodes[s_union->size] = a->nodes[i++];
-        } else if (a->nodes[i] == b->nodes[k]) {
-            s_union->nodes[s_union->size] = a->nodes[i++];
-            k++;
-        } else {
-            s_union->nodes[s_union->size] = b->nodes[k++];
-        }
+    for (int i = 0; i < a->size; i++){
+        s_union->nodes[i] = a->nodes[i];
         s_union->size++;
     }
+
+    // If element of set B isn't in set A, add to union
+    for (int i = 0; i < b->size; i++){
+        bool element_in_set = false;
+        for (int j = 0; j < a->size; j++){
+            if (a->nodes[j] == b->nodes[i]){
+                element_in_set = true;
+                break;
+            }
+        }
+
+        if (!element_in_set){
+            s_union->nodes[s_union->size] = b->nodes[i];
+            s_union->size++;
+        }
+    }
+
+    set_sort(s_union);
     return s_union;
 }
 
