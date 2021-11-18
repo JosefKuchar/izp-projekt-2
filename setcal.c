@@ -27,7 +27,7 @@
 
 /*---------------------------------- ENUMS ----------------------------------*/
 
-enum store_node_type { UNIVERSE, SET, RELATION, COMMAND };
+enum store_node_type { SET, RELATION, COMMAND };
 
 enum function_input {
     IN_SET,
@@ -88,8 +88,9 @@ struct store_node {
 
 // Struct to keep track of every node inside store
 struct store {
-    int size;                  // Store size
-    struct store_node* nodes;  // Store nodes
+    int size;                   // Store size
+    struct store_node* nodes;   // Store nodes
+    struct universe* universe;  // Universe
 };
 
 /*--------------------------------- SORTING ---------------------------------*/
@@ -180,12 +181,35 @@ int get_max(int a, int b) {
 }
 
 /**
- * Get universe from store
- * @param store Store
- * @return Pointer to universe
+ * Generate universe from set
+ * @param universe Universe
+ * @return Set if everything went correctly, null if malloc failed
  */
-struct universe* get_universe(struct store* store) {
-    return store->nodes[0].obj;
+struct set* get_set_from_universe(struct universe* universe) {
+    // Allocate new set
+    struct set* set = malloc(sizeof(struct set));
+    // Check if malloc failed
+    if (set == NULL) {
+        return NULL;
+    }
+    // Define set
+    set->size = universe->size;
+    set->nodes = malloc(sizeof(int) * set->size);
+    // If set has 0 size we are done
+    if (set->size == 0) {
+        return set;
+    }
+    // Check if second malloc failed
+    if (set->nodes == NULL) {
+        free(set);
+        return NULL;
+    }
+    // Generate set nodes
+    for (int i = 0; i < universe->size; i++) {
+        set->nodes[i] = i;
+    }
+
+    return set;
 }
 
 /**
@@ -313,7 +337,6 @@ bool command_arguments_valid(struct command* command,
             return false;
         }
     }
-
     // Check if argument types match input types
     switch (def.input) {
         case IN_SET:
@@ -339,19 +362,12 @@ bool command_arguments_valid(struct command* command,
  */
 bool store_valid(struct store* store) {
     // Ensure good order of node types
-    bool u_found = false, s_or_r_found = false, c_found = false;
-    for (int i = 0; i < store->size; i++) {
+    bool s_or_r_found = false, c_found = false;
+    for (int i = 1; i < store->size; i++) {
         enum store_node_type type = store->nodes[i].type;
-        // Universe can only be one and it has to be first element
-        if (type == UNIVERSE) {
-            if (i == 0) {
-                u_found = true;
-            } else {
-                return false;
-            }
-            // Sets or relations can be only after universe or each other
-        } else if (type == SET || type == RELATION) {
-            if (c_found || !u_found) {
+        // Sets or relations can be only after universe or each other
+        if (type == SET || type == RELATION) {
+            if (c_found) {
                 return false;
             }
             s_or_r_found = true;
@@ -364,7 +380,7 @@ bool store_valid(struct store* store) {
         }
     }
     // Ensure all types of nodes are present
-    return u_found && s_or_r_found && c_found;
+    return s_or_r_found && c_found;
 }
 
 /*----------------------------- PRINT FUNCTIONS -----------------------------*/
@@ -382,28 +398,13 @@ void print_bool(bool b) {
 }
 
 /**
- * Print universe
- * @param u Universe
- */
-void print_universe(struct universe* u) {
-    // Indicate we are printing universe
-    printf("U");
-    // Loop around all nodes inside universe
-    for (int i = 0; i < u->size; i++) {
-        // Print each node inside universe
-        printf(" %s", u->nodes[i]);
-    }
-    printf("\n");
-}
-
-/**
  * Print set
  * @param a Set
  * @param u Universe
  */
-void print_set(struct set* a, struct universe* u) {
-    // Indicate we are printing set
-    printf("S");
+void print_set(struct set* a, struct universe* u, bool is_universe) {
+    // Indicate we are printing set or universe
+    printf(is_universe ? "U" : "S");
     // Loop around all nodes inside set
     for (int i = 0; i < a->size; i++) {
         // Print each node inside set
@@ -746,22 +747,23 @@ bool relation_reflexive(struct relation* r, struct universe* u) {
 
 /**
  * @brief Find out if relation is symmetric
- * 
+ *
  * @param r Relation - sorted
  * @retval true relation is symmetric
  * @retval false relation is not symmetric
  */
 bool relation_symmetric(struct relation* r) {
-    //Loop around all relation nodes
+    // Loop around all relation nodes
     for (int i = 0; i < r->size; i++) {
-        //Loop around all relation nodes
+        // Loop around all relation nodes
         for (int k = 0; k < r->size; k++) {
-            //If symmetric node is found => break
+            // If symmetric node is found => break
             if (r->nodes[i].a == r->nodes[k].b &&
                 r->nodes[i].b == r->nodes[k].a) {
                 break;
             }
-            //If the iteration in the last one => symmetric node wasn't found and relation is not symmetric
+            // If the iteration in the last one => symmetric node wasn't found
+            // and relation is not symmetric
             if (k + 1 == r->size) {
                 return false;
             }
@@ -772,17 +774,17 @@ bool relation_symmetric(struct relation* r) {
 
 /**
  * @brief Find out if relation is symmetric
- * 
+ *
  * @param r Relation - sorted
  * @retval true relation is antisymmetric
  * @retval false relation is not antisymmetric
  */
 bool relation_antisymmetric(struct relation* r) {
-    //Loop around all relation nodes
+    // Loop around all relation nodes
     for (int i = 0; i < r->size; i++) {
-        //Loop around all remaining nodes
+        // Loop around all remaining nodes
         for (int k = i + 1; k < r->size; k++) {
-            //If symmetric node is found => relation is not antisymmetric
+            // If symmetric node is found => relation is not antisymmetric
             if (r->nodes[i].a == r->nodes[k].b &&
                 r->nodes[i].b == r->nodes[k].a) {
                 return false;
@@ -794,28 +796,29 @@ bool relation_antisymmetric(struct relation* r) {
 
 /**
  * @brief Find out if relation is transitive
- * 
+ *
  * @param r Relation - sorted
  * @retval true relation is transitive
  * @retval false relation is not transitive
  */
 bool relation_transitive(struct relation* r) {
-    //Transitive relation: (aRb & bRa) => aRc
+    // Transitive relation: (aRb & bRa) => aRc
 
-    //Loop around all relation nodes
+    // Loop around all relation nodes
     for (int i = 0; i < r->size; i++) {
-        //Loop around all relation nodes
+        // Loop around all relation nodes
         for (int j = 0; j < r->size; j++) {
-            //Looks for node that has second element same as current node (bRa)
+            // Looks for node that has second element same as current node (bRa)
             if (r->nodes[i].b == r->nodes[j].a) {
-                //Loop around all relation nodes
+                // Loop around all relation nodes
                 for (int k = 0; k < r->size; k++) {
-                    //Looks for node that meets aRc
+                    // Looks for node that meets aRc
                     if (r->nodes[i].a == r->nodes[k].a &&
                         r->nodes[j].b == r->nodes[k].b) {
                         break;
                     }
-                    //If the iteration is the last one => aRc wasn't found and relation is not transitive
+                    // If the iteration is the last one => aRc wasn't found and
+                    // relation is not transitive
                     if (k + 1 == r->size) {
                         return false;
                     }
@@ -828,15 +831,15 @@ bool relation_transitive(struct relation* r) {
 
 /**
  * @brief Find out if relation is a function
- * 
+ *
  * @param r Relation - sorted
  * @retval true relation is a function
  * @retval false relation is not a function
  */
 bool relation_function(struct relation* r) {
-    //Loops around all elemnts - 1
+    // Loops around all elemnts - 1
     for (int i = 0; i < r->size - 1; i++) {
-        //If current node is same as next node => relation is not a function
+        // If current node is same as next node => relation is not a function
         if (r->nodes[i].a == r->nodes[i + 1].a) {
             return false;
         }
@@ -1233,9 +1236,6 @@ void free_store(struct store* store) {
     // Free all store nodes based on their type
     for (int i = 0; i < store->size; i++) {
         switch (store->nodes[i].type) {
-            case UNIVERSE:
-                free_universe(store->nodes[i].obj);
-                break;
             case SET:
                 free_set(store->nodes[i].obj);
                 break;
@@ -1247,6 +1247,9 @@ void free_store(struct store* store) {
                 break;
         }
     }
+
+    // Free universe
+    free_universe(store->universe);
 
     // Free store itself
     free(store->nodes);
@@ -1319,7 +1322,7 @@ bool process_output_relation(struct store* s, struct relation* r, int i) {
     }
 
     // Print the actual relation
-    print_relation(r, get_universe(s));
+    print_relation(r, s->universe);
 
     // Replace command with actual relation in store
     free_command(s->nodes[i].obj);
@@ -1343,7 +1346,7 @@ bool process_output_set(struct store* s, struct set* r, int i) {
     }
 
     // Print the actual set
-    print_set(r, get_universe(s));
+    print_set(r, s->universe, false);
 
     // Replace command with actual set in store
     free_command(s->nodes[i].obj);
@@ -1366,13 +1369,13 @@ void* process_function_input(struct store* s,
                          s->nodes[c->args[1] - 1].obj);
         case IN_SET_UNIVERSE:;
             void* (*f_s_u)(struct set*, struct universe*) = def.function;
-            return f_s_u(s->nodes[c->args[0] - 1].obj, get_universe(s));
+            return f_s_u(s->nodes[c->args[0] - 1].obj, s->universe);
         case IN_RELATION:;
             void* (*f_r)(struct relation*) = def.function;
             return f_r(s->nodes[c->args[0] - 1].obj);
         case IN_RELATION_UNIVERSE:;
             void* (*f_r_u)(struct relation*, struct universe*) = def.function;
-            return f_r_u(s->nodes[c->args[0] - 1].obj, get_universe(s));
+            return f_r_u(s->nodes[c->args[0] - 1].obj, s->universe);
         default:
             return NULL;
     }
@@ -1415,14 +1418,11 @@ bool run_command(struct command* command, struct store* store, int* i) {
 bool store_runner(struct store* store) {
     for (int i = 0; i < store->size; i++) {
         switch (store->nodes[i].type) {
-            case UNIVERSE:
-                print_universe(store->nodes[i].obj);
-                break;
             case SET:
-                print_set(store->nodes[i].obj, get_universe(store));
+                print_set(store->nodes[i].obj, store->universe, i == 0);
                 break;
             case RELATION:
-                print_relation(store->nodes[i].obj, get_universe(store));
+                print_relation(store->nodes[i].obj, store->universe);
                 break;
             case COMMAND:
                 // Command can modify program counter
@@ -1690,25 +1690,45 @@ bool parse_command(FILE* fp, struct command* command) {
 bool process_universe(FILE* fp, struct store* store, bool empty) {
     int index = store->size;
 
-    // Init universe object
-    store->nodes[index].type = UNIVERSE;
-    // TODO check malloc
-    store->nodes[index].obj = calloc(1, sizeof(struct universe));
-    store->size++;
+    // TODO chck malloc
+    // TODO make this function better
+    store->universe = malloc(sizeof(struct universe));
 
-    // If set is empty, we can return it, it is completely valid
+    // If universe is empty, we can return, it is completely valid
     if (empty) {
+        store->universe->nodes = NULL;
+        store->universe->size = 0;
+        store->nodes[index].type = SET;
+        store->nodes[index].obj = get_set_from_universe(store->universe);
+        store->size++;
         return true;
     }
 
     // Parse universe
-    if (!parse_universe(fp, store->nodes[index].obj)) {
+    if (!parse_universe(fp, store->universe)) {
         fprintf(stderr, "Error parsing universe!\n");
         return false;
     }
 
     // Check if universe is valid
-    return universe_valid(store->nodes[index].obj);
+    if (!universe_valid(store->universe)) {
+        fprintf(stderr, "Invalid universe!\n");
+        return false;
+    }
+
+    // Generate set from universe
+    store->nodes[index].type = SET;
+    store->nodes[index].obj = get_set_from_universe(store->universe);
+
+    // Check malloc error
+    if (store->nodes[index].obj == NULL) {
+        fprintf(stderr, "Malloc error!\n");
+        return false;
+    }
+
+    store->size++;
+
+    return true;
 }
 
 /**
@@ -1732,7 +1752,7 @@ bool process_set(FILE* fp, struct store* store, bool empty) {
     }
 
     // Handle parsing
-    if (!parse_set(fp, store->nodes[index].obj, get_universe(store))) {
+    if (!parse_set(fp, store->nodes[index].obj, store->universe)) {
         fprintf(stderr, "Error parsing set!\n");
         return false;
     }
@@ -1765,7 +1785,7 @@ bool process_relation(FILE* fp, struct store* store, bool empty) {
     }
 
     // Parse relation
-    if (!parse_relation(fp, store->nodes[index].obj, get_universe(store))) {
+    if (!parse_relation(fp, store->nodes[index].obj, store->universe)) {
         fprintf(stderr, "Error parsing relation!\n");
         return false;
     }
@@ -1819,8 +1839,8 @@ bool process_line(FILE* fp, char c, struct store* store) {
     bool empty = next == '\n';
 
     // This shouldn't happen with valid file
-    // Ensure that universe will be first
-    if ((next != ' ' && !empty) || (store->size == 0 && c != 'U')) {
+    // Ensure that universe will be first and present only once
+    if ((next != ' ' && !empty) || (c == 'U' && store->size != 0)) {
         return false;
     }
 
