@@ -859,9 +859,12 @@ struct set* relation_domain(struct relation* r) {
         return NULL;
     }
 
+    domain->size = 0;
     if (r->size > 0) {
-        domain->size = 0;
         domain->nodes[domain->size++] = r->nodes[0].a;
+    } else {
+        domain->nodes = NULL;
+        return domain;
     }
     for (int i = 1; i < r->size; i++) {
         if (r->nodes[i].a != r->nodes[i - 1].a) {
@@ -1465,7 +1468,7 @@ bool parse_line_number(char* string, int* result) {
  */
 bool parse_universe(FILE* fp, struct universe* u) {
     // Allocate memory for 1 node
-    u->nodes = calloc(sizeof(u->nodes), 1);
+    u->nodes = calloc(sizeof(*u->nodes), 1);
     u->size = 1;
 
     int index = 0;
@@ -1487,7 +1490,12 @@ bool parse_universe(FILE* fp, struct universe* u) {
             fprintf(stderr, "Invalid character in universum\n");
             return false;
         }
-        // TODO handle overflow
+
+        if (index >= MAX_STRING_LENGTH) {
+            fprintf(stderr, "Element name too long!\n");
+            return false;
+        }
+
         u->nodes[u->size - 1][index] = c;
         index++;
     }
@@ -1539,6 +1547,11 @@ bool parse_set(FILE* fp, struct set* s, struct universe* u) {
             } else {
                 continue;
             }
+        }
+
+        if (index >= MAX_STRING_LENGTH) {
+            fprintf(stderr, "Element name too long!\n");
+            return false;
         }
 
         node[index] = c;
@@ -1593,6 +1606,12 @@ bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
                     }
                     continue;
                 }
+
+                if (index >= MAX_STRING_LENGTH) {
+                    fprintf(stderr, "Element name too long!\n");
+                    return false;
+                }
+
                 node[index] = c;
                 index++;
             }
@@ -1828,7 +1847,8 @@ bool process_line(FILE* fp, char c, struct store* store) {
 
     // This shouldn't happen with valid file
     // Ensure that universe will be first and present only once
-    if ((next != ' ' && !empty) || (c == 'U' && store->size != 0)) {
+    if ((next != ' ' && !empty) ||
+        (store->size != 0 && store->universe == NULL)) {
         return false;
     }
 
@@ -1946,6 +1966,7 @@ int main(int argc, char* argv[]) {
     struct store store;
     store.size = 0;
     store.nodes = malloc(sizeof(struct store_node) * 1000);
+    store.universe = NULL;
     if (store.nodes == NULL) {
         fprintf(stderr, "Malloc error!\n");
         return false;
