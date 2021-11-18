@@ -516,7 +516,7 @@ struct set* set_union(struct set* a, struct set* b) {
         return NULL;
     }
 
-    // If one of parameter sets is empty, copy other set    
+    // If one of parameter sets is empty, copy other set
     if (a->size == 0) {
         for (int i = 0; i < b->size; i++) {
             s_union->nodes[i] = b->nodes[i];
@@ -531,22 +531,22 @@ struct set* set_union(struct set* a, struct set* b) {
         return s_union;
     }
 
-    for (int i = 0; i < a->size; i++){
+    for (int i = 0; i < a->size; i++) {
         s_union->nodes[i] = a->nodes[i];
         s_union->size++;
     }
 
     // If element of set B isn't in set A, add to union
-    for (int i = 0; i < b->size; i++){
+    for (int i = 0; i < b->size; i++) {
         bool element_in_set = false;
-        for (int j = 0; j < a->size; j++){
-            if (a->nodes[j] == b->nodes[i]){
+        for (int j = 0; j < a->size; j++) {
+            if (a->nodes[j] == b->nodes[i]) {
                 element_in_set = true;
                 break;
             }
         }
 
-        if (!element_in_set){
+        if (!element_in_set) {
             s_union->nodes[s_union->size] = b->nodes[i];
             s_union->size++;
         }
@@ -744,13 +744,24 @@ bool relation_reflexive(struct relation* r, struct universe* u) {
     return true;
 }
 
+/**
+ * @brief Find out if relation is symmetric
+ * 
+ * @param r Relation - sorted
+ * @retval true relation is symmetric
+ * @retval false relation is not symmetric
+ */
 bool relation_symmetric(struct relation* r) {
+    //Loop around all relation nodes
     for (int i = 0; i < r->size; i++) {
+        //Loop around all relation nodes
         for (int k = 0; k < r->size; k++) {
+            //If symmetric node is found => break
             if (r->nodes[i].a == r->nodes[k].b &&
                 r->nodes[i].b == r->nodes[k].a) {
                 break;
             }
+            //If the iteration in the last one => symmetric node wasn't found and relation is not symmetric
             if (k + 1 == r->size) {
                 return false;
             }
@@ -759,9 +770,19 @@ bool relation_symmetric(struct relation* r) {
     return true;
 }
 
+/**
+ * @brief Find out if relation is symmetric
+ * 
+ * @param r Relation - sorted
+ * @retval true relation is antisymmetric
+ * @retval false relation is not antisymmetric
+ */
 bool relation_antisymmetric(struct relation* r) {
+    //Loop around all relation nodes
     for (int i = 0; i < r->size; i++) {
+        //Loop around all remaining nodes
         for (int k = i + 1; k < r->size; k++) {
+            //If symmetric node is found => relation is not antisymmetric
             if (r->nodes[i].a == r->nodes[k].b &&
                 r->nodes[i].b == r->nodes[k].a) {
                 return false;
@@ -771,15 +792,30 @@ bool relation_antisymmetric(struct relation* r) {
     return true;
 }
 
+/**
+ * @brief Find out if relation is transitive
+ * 
+ * @param r Relation - sorted
+ * @retval true relation is transitive
+ * @retval false relation is not transitive
+ */
 bool relation_transitive(struct relation* r) {
+    //Transitive relation: (aRb & bRa) => aRc
+
+    //Loop around all relation nodes
     for (int i = 0; i < r->size; i++) {
+        //Loop around all relation nodes
         for (int j = 0; j < r->size; j++) {
+            //Looks for node that has second element same as current node (bRa)
             if (r->nodes[i].b == r->nodes[j].a) {
+                //Loop around all relation nodes
                 for (int k = 0; k < r->size; k++) {
+                    //Looks for node that meets aRc
                     if (r->nodes[i].a == r->nodes[k].a &&
                         r->nodes[j].b == r->nodes[k].b) {
                         break;
                     }
+                    //If the iteration is the last one => aRc wasn't found and relation is not transitive
                     if (k + 1 == r->size) {
                         return false;
                     }
@@ -790,8 +826,17 @@ bool relation_transitive(struct relation* r) {
     return true;
 }
 
+/**
+ * @brief Find out if relation is a function
+ * 
+ * @param r Relation - sorted
+ * @retval true relation is a function
+ * @retval false relation is not a function
+ */
 bool relation_function(struct relation* r) {
+    //Loops around all elemnts - 1
     for (int i = 0; i < r->size - 1; i++) {
+        //If current node is same as next node => relation is not a function
         if (r->nodes[i].a == r->nodes[i + 1].a) {
             return false;
         }
@@ -805,7 +850,7 @@ struct set* relation_domain(struct relation* r) {
         return NULL;
     }
 
-    if (!relation_function(r)){
+    if (!relation_function(r)) {
         domain->size = 0;
         domain->nodes = NULL;
         return domain;
@@ -841,7 +886,7 @@ struct set* relation_codomain(struct relation* r) {
         return NULL;
     }
 
-    if (!relation_function(r)){
+    if (!relation_function(r)) {
         codomain->size = 0;
         codomain->nodes = NULL;
         return codomain;
