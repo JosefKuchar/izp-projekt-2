@@ -853,12 +853,6 @@ struct set* relation_domain(struct relation* r) {
         return NULL;
     }
 
-    if (!relation_function(r)) {
-        domain->size = 0;
-        domain->nodes = NULL;
-        return domain;
-    }
-
     domain->nodes = malloc(sizeof(int));
     if (domain->nodes == NULL) {
         free(domain);
@@ -887,12 +881,6 @@ struct set* relation_codomain(struct relation* r) {
     struct set* codomain = malloc(sizeof(struct set));
     if (codomain == NULL) {
         return NULL;
-    }
-
-    if (!relation_function(r)) {
-        codomain->size = 0;
-        codomain->nodes = NULL;
-        return codomain;
     }
 
     codomain->nodes = malloc(sizeof(int));
