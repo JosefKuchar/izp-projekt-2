@@ -388,7 +388,7 @@ bool store_valid(struct store* store) {
     return s_or_r_found && c_found;
 }
 #pragma endregion
-#pragma region PRIINT FUNCTIONS
+#pragma region PRINT FUNCTIONS
 /*----------------------------- PRINT FUNCTIONS -----------------------------*/
 
 /**
@@ -857,18 +857,18 @@ bool relation_function(struct relation* r) {
 
 /**
  * @brief Relation domain function
- * 
+ *
  * @param r Relation - sorted
- * @return Pointer to a new set 
+ * @return Pointer to a new set
  */
 struct set* relation_domain(struct relation* r) {
-    //Memory allocation for set
+    // Memory allocation for set
     struct set* domain = malloc(sizeof(struct set));
     if (domain == NULL) {
         return NULL;
     }
 
-    //Memory allocation for set nodes
+    // Memory allocation for set nodes
     domain->nodes = malloc(sizeof(int));
     if (domain->nodes == NULL) {
         free(domain);
@@ -877,18 +877,19 @@ struct set* relation_domain(struct relation* r) {
 
     domain->size = 0;
 
-    //Checks if relation is empty => returns emtpy relation
+    // Checks if relation is empty => returns emtpy relation
     if (r->size <= 0) {
         domain->nodes = NULL;
         return domain;
     }
 
-    //Puts the first element of the first relation node to set
+    // Puts the first element of the first relation node to set
     domain->nodes[domain->size++] = r->nodes[0].a;
     for (int i = 1; i < r->size; i++) {
-        //If the last element is not the same as current element => adds element in set
+        // If the last element is not the same as current element => adds
+        // element in set
         if (r->nodes[i].a != r->nodes[i - 1].a) {
-            //Memory reallocation for set nodes
+            // Memory reallocation for set nodes
             domain->nodes =
                 srealloc(domain->nodes, sizeof(int) * (domain->size + 1));
             if (domain->nodes == NULL) {
@@ -903,18 +904,18 @@ struct set* relation_domain(struct relation* r) {
 
 /**
  * @brief Relation codomain function
- * 
+ *
  * @param r Relation - sorted
  * @return Pointer to a new set
  */
 struct set* relation_codomain(struct relation* r) {
-    //Memory allocation for set
+    // Memory allocation for set
     struct set* codomain = malloc(sizeof(struct set));
     if (codomain == NULL) {
         return NULL;
     }
 
-    //Memory allocation for set nodes
+    // Memory allocation for set nodes
     codomain->nodes = malloc(sizeof(int));
     if (codomain->nodes == NULL) {
         return NULL;
@@ -922,19 +923,19 @@ struct set* relation_codomain(struct relation* r) {
 
     codomain->size = 0;
 
-    //Loop around all nodes
+    // Loop around all nodes
     for (int i = 0; i < r->size; i++) {
         bool found = false;
-        //Find out if current element is already in the codomain set
+        // Find out if current element is already in the codomain set
         for (int k = 0; k < codomain->size; k++) {
             if (r->nodes[i].b == codomain->nodes[k]) {
                 found = true;
                 break;
             }
         }
-        //If element wasn't found in codomain => adds element
+        // If element wasn't found in codomain => adds element
         if (!found) {
-            //Memory reallocation for set nodes
+            // Memory reallocation for set nodes
             codomain->nodes =
                 srealloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
             if (codomain->nodes == NULL) {
@@ -950,7 +951,7 @@ struct set* relation_codomain(struct relation* r) {
 
 /**
  * @brief Find out if relation is injective
- * 
+ *
  * @param r Relation sorted
  * @retval true - relation is injective
  * @retval false - relation is not injective
@@ -960,7 +961,8 @@ bool relation_injective(struct relation* r) {
     for (int i = 0; i < r->size; i++) {
         // Loop around all remaining nodes
         for (int j = i + 1; j < r->size; j++) {
-            // If current node has first or second element same as one of the remaining nodes => not injective
+            // If current node has first or second element same as one of the
+            // remaining nodes => not injective
             if ((r->nodes[i].a == r->nodes[j].a) ||
                 (r->nodes[i].b == r->nodes[j].b)) {
                 return false;
@@ -972,7 +974,7 @@ bool relation_injective(struct relation* r) {
 
 /**
  * @brief Find out if relation is surjective
- * 
+ *
  * @param r Relation - sorted
  * @return true - relation is surjective
  * @return false - relation is not surjective
@@ -990,9 +992,9 @@ bool relation_surjective(struct relation* r) {
 
 /**
  * @brief Find out if relation is bijective
- * 
+ *
  * @param r Relation - sorted
- * @retval true - relation is bijective 
+ * @retval true - relation is bijective
  * @return false - relation is not bijective
  */
 bool relation_bijective(struct relation* r) {
