@@ -6,6 +6,7 @@
  * 2021
  */
 
+#pragma region LIBRARIES
 /*-------------------------------- LIBRARIES --------------------------------*/
 
 #include <ctype.h>    // Char functions
@@ -15,16 +16,17 @@
 #include <stdlib.h>   // EXIT macros
 #include <string.h>   // String manipulation functions
 #include <time.h>     // For seeding random generator
-
+#pragma endregion
+#pragma region CONSTANTS
 /*-------------------------------- CONSTANTS --------------------------------*/
-
 // Define string length hard limits
 #define MAX_STRING_LENGTH 30
 #define STRING_BUFFER_SIZE MAX_STRING_LENGTH + 1  // +1 is for \0
 
 // Define maximum command arguments
 #define MAX_COMMAND_ARGUMENTS 3
-
+#pragma endregion
+#pragma region ENUMS
 /*---------------------------------- ENUMS ----------------------------------*/
 
 enum store_node_type { SET, RELATION, COMMAND };
@@ -92,7 +94,8 @@ struct store {
     struct store_node* nodes;   // Store nodes
     struct universe* universe;  // Universe
 };
-
+#pragma endregion
+#pragma region SORTING
 /*--------------------------------- SORTING ---------------------------------*/
 
 /**
@@ -140,7 +143,8 @@ void set_sort(struct set* s) {
 void relation_sort(struct relation* r) {
     qsort(r->nodes, r->size, sizeof(struct relation_node), compare_rel_nodes);
 }
-
+#pragma endregion
+#pragma region HELPER FUNCTIONS
 /*----------------------------- HELPER FUNCTIONS ----------------------------*/
 
 /**
@@ -232,7 +236,8 @@ int get_argument_count(enum function_input input_type) {
     }
     return 1;
 }
-
+#pragma endregion
+#pragma region VALIDATIONS
 /*------------------------------- VALIDATIONS -------------------------------*/
 
 /**
@@ -382,7 +387,8 @@ bool store_valid(struct store* store) {
     // Ensure all types of nodes are present
     return s_or_r_found && c_found;
 }
-
+#pragma endregion
+#pragma region PRIINT FUNCTIONS
 /*----------------------------- PRINT FUNCTIONS -----------------------------*/
 
 /**
@@ -428,7 +434,8 @@ void print_relation(struct relation* r, struct universe* u) {
     }
     printf("\n");
 }
-
+#pragma endregion
+#pragma region SET FUNCTIONS
 /*------------------------------ SET FUNCTIONS ------------------------------*/
 
 /**
@@ -702,7 +709,8 @@ bool set_equals(struct set* a, struct set* b) {
 
     return true;
 }
-
+#pragma endregion
+#pragma region RELATION FUNCTIONS
 /*--------------------------- RELATION FUNCTIONS ----------------------------*/
 
 /**
@@ -1158,6 +1166,8 @@ struct relation* relation_closure_trans(struct relation* r) {
     return result;
 }
 
+#pragma endregion
+#pragma region SPECIAL COMMANDS
 /*---------------------------- SPECIAL COMMANDS -----------------------------*/
 
 /**
@@ -1221,7 +1231,8 @@ bool select_command(struct store_node* node, struct universe* u) {
             return false;
     }
 }
-
+#pragma endregion
+#pragma region MEMORY FREEING FUNCTIONS
 /*------------------------ MEMORY FREEING FUNCTIONS -------------------------*/
 
 /**
@@ -1317,7 +1328,8 @@ const struct command_def COMMAND_DEFS[] = {
     {"closure_ref", relation_closure_ref, IN_RELATION_UNIVERSE, OUT_RELATION},
     {"closure_sym", relation_closure_sym, IN_RELATION, OUT_RELATION},
     {"closure_trans", relation_closure_trans, IN_RELATION, OUT_RELATION}};
-
+#pragma endregion
+#pragma region STORE RUNNER
 /*------------------------------- STORE RUNNER ------------------------------*/
 
 /**
@@ -1473,7 +1485,8 @@ bool store_runner(struct store* store) {
 
     return true;
 }
-
+#pragma endregion
+#pragma region FILE PARSING
 /*------------------------------- FILE PARSING ------------------------------*/
 
 /**
@@ -1941,7 +1954,8 @@ bool process_file(FILE* fp, struct store* store) {
 
     return true;
 }
-
+#pragma endregion
+#pragma region FILE MANIPULATION
 /*---------------------------- FILE MANIPULATION ----------------------------*/
 
 /**
@@ -1974,7 +1988,8 @@ bool close_file(FILE* fp) {
         return true;
     }
 }
-
+#pragma endregion
+#pragma region PROGRAM ARGUMENT FUNCTIONS
 /*------------------------ PROGRAM ARGUMENT FUNCTIONS ------------------------*/
 
 /**
@@ -1990,7 +2005,8 @@ bool check_arguments(int argc) {
         return true;
     }
 }
-
+#pragma endregion
+#pragma region ENTRY
 /*---------------------------------- ENTRY ----------------------------------*/
 
 int main(int argc, char* argv[]) {
@@ -2031,3 +2047,4 @@ int main(int argc, char* argv[]) {
 
     return EXIT_SUCCESS;
 }
+#pragma endregion
