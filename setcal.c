@@ -145,7 +145,7 @@ void relation_sort(struct relation* r) {
 
 /**
  * Realloc that automatically frees old block when fails
- * @param block Exisiting memory block
+ * @param block Existing memory block
  * @param size New size
  * @return Pointer to newly allocated memory, NULL when fails
  */
@@ -708,7 +708,7 @@ bool set_equals(struct set* a, struct set* b) {
 /**
  * Find out if relation is reflexive
  * @param r Relation - sorted
- * @param u Universe - soted
+ * @param u Universe - sorted
  * @return True if relation is reflexive
  */
 bool relation_reflexive(struct relation* r, struct universe* u) {
@@ -847,12 +847,20 @@ bool relation_function(struct relation* r) {
     return true;
 }
 
+/**
+ * @brief Relation domain function
+ * 
+ * @param r Relation - sorted
+ * @return Pointer to a new set 
+ */
 struct set* relation_domain(struct relation* r) {
+    //Memory allocation for set
     struct set* domain = malloc(sizeof(struct set));
     if (domain == NULL) {
         return NULL;
     }
 
+    //Memory allocation for set nodes
     domain->nodes = malloc(sizeof(int));
     if (domain->nodes == NULL) {
         free(domain);
@@ -860,64 +868,75 @@ struct set* relation_domain(struct relation* r) {
     }
 
     domain->size = 0;
-    if (r->size > 0) {
-        domain->nodes[domain->size++] = r->nodes[0].a;
-    } else {
+
+    //Checks if relation is empty => returns emtpy relation
+    if (r->size <= 0) {
         domain->nodes = NULL;
         return domain;
     }
+
+    //Puts the first element of the first relation node to set
+    domain->nodes[domain->size++] = r->nodes[0].a;
     for (int i = 1; i < r->size; i++) {
+        //If the last element is not the same as current element => adds element in set
         if (r->nodes[i].a != r->nodes[i - 1].a) {
+            //Memory reallocation for set nodes
             domain->nodes =
                 srealloc(domain->nodes, sizeof(int) * (domain->size + 1));
             if (domain->nodes == NULL) {
                 return NULL;
             }
+
             domain->nodes[domain->size++] = r->nodes[i].a;
         }
     }
     return domain;
 }
 
+/**
+ * @brief Relation codomain function
+ * 
+ * @param r Relation - sorted
+ * @return Pointer to a new set
+ */
 struct set* relation_codomain(struct relation* r) {
-    // TODO too ugly -> make better
+    //Memory allocation for set
     struct set* codomain = malloc(sizeof(struct set));
     if (codomain == NULL) {
         return NULL;
     }
 
+    //Memory allocation for set nodes
     codomain->nodes = malloc(sizeof(int));
     if (codomain->nodes == NULL) {
         return NULL;
     }
+
     codomain->size = 0;
 
-    int last = -1;
-    int max = -1;
+    //Loop around all nodes
     for (int i = 0; i < r->size; i++) {
-        if (r->nodes[i].b > max) {
-            max = r->nodes[i].b;
-        }
-    }
-
-    for (int i = 0; i < r->size; i++) {
-        int min = max;
-        for (int k = 0; k < r->size; k++) {
-            if (r->nodes[k].b < min && r->nodes[k].b > last) {
-                min = r->nodes[k].b;
+        bool found = false;
+        //Find out if current element is already in the codomain set
+        for (int k = 0; k < codomain->size; k++) {
+            if (r->nodes[i].b == codomain->nodes[k]) {
+                found = true;
+                break;
             }
         }
-        last = min;
-        codomain->nodes =
-            srealloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
-        if (codomain->nodes == NULL) {
-            return NULL;
-        }
-        codomain->nodes[codomain->size++] = min;
-        if (min == max) {
-            break;
+        //If element wasn't found in codomain => adds element
+        if (!found) {
+            //Memory reallocation for set nodes
+            codomain->nodes =
+                srealloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
+            if (codomain->nodes == NULL) {
+                return NULL;
+            }
+
+            codomain->nodes[codomain->size++] = r->nodes[i].b;
         }
     }
+    set_sort(codomain);
     return codomain;
 }
 
@@ -949,7 +968,7 @@ bool relation_bijective(struct relation* r) {
 /**
  * Create reflexive relation closure
  * @param r Relation - sorted
- * @param u Universe - soted
+ * @param u Universe - sorted
  * @return Pointer to sorted relation closure
  * or NULL if didn't execute correctly
  */
@@ -1005,10 +1024,10 @@ struct relation* relation_closure_ref(struct relation* r, struct universe* u) {
 }
 
 /**
- * Create symetric relation closure
+ * Create symmetric relation closure
  * @param r Relation - sorted
- * @param u Universe - soted
- * @return Pointer to symetric relation closure
+ * @param u Universe - sorted
+ * @return Pointer to symmetric relation closure
  * or NULL if didn't execute correctly
  */
 struct relation* relation_closure_sym(struct relation* r) {
@@ -1033,7 +1052,7 @@ struct relation* relation_closure_sym(struct relation* r) {
                 r->nodes[i].b == r->nodes[k].a) {
                 break;
             }
-            // If relation is missing node to be symetric, add that node
+            // If relation is missing node to be symmetric, add that node
             if (k + 1 == r->size) {
                 result->size += 1;
                 result->nodes = srealloc(
@@ -1054,7 +1073,7 @@ struct relation* relation_closure_sym(struct relation* r) {
 /**
  * Create transitive relation closure
  * @param r Relation - sorted
- * @param u Universe - soted
+ * @param u Universe - sorted
  * @return Pointer to transitive relation closure
  * or NULL if didn't execute correctly
  */
@@ -1277,7 +1296,7 @@ const struct command_def COMMAND_DEFS[] = {
 /**
  * Function for procesing bool ouput
  * @param r Result - bool
- * @return True if no error occured
+ * @return True if no error occurred
  */
 bool process_output_bool(bool r,
                          enum function_input input,
@@ -1304,7 +1323,7 @@ bool process_output_bool(bool r,
  * @param s Store
  * @param r Result - relation
  * @param i Program counter
- * @return True if no error occured
+ * @return True if no error occurred
  */
 bool process_output_relation(struct store* s, struct relation* r, int i) {
     // Check if function actually returned valid object
@@ -1328,10 +1347,10 @@ bool process_output_relation(struct store* s, struct relation* r, int i) {
  * @param s Store
  * @param r Result - set
  * @param i Program counter
- * @return True if no error occured
+ * @return True if no error occurred
  */
 bool process_output_set(struct store* s, struct set* r, int i) {
-    // Check if function acutally returned valid object
+    // Check if function actually returned valid object
     if (r == NULL) {
         return false;
     }
@@ -1697,7 +1716,7 @@ bool parse_command(FILE* fp, struct command* command) {
 bool process_universe(FILE* fp, struct store* store, bool empty) {
     int index = store->size;
 
-    // TODO chck malloc
+    // TODO check malloc
     // TODO make this function better
     store->universe = malloc(sizeof(struct universe));
 
@@ -1929,7 +1948,7 @@ bool close_file(FILE* fp) {
     }
 }
 
-/*------------------------ PROGRAM ARGUMENT FUNCTONS ------------------------*/
+/*------------------------ PROGRAM ARGUMENT FUNCTIONS ------------------------*/
 
 /**
  * Check number of arguments
