@@ -749,8 +749,8 @@ bool relation_reflexive(struct relation* r, struct universe* u) {
  * @brief Find out if relation is symmetric
  *
  * @param r Relation - sorted
- * @retval true relation is symmetric
- * @retval false relation is not symmetric
+ * @retval true - relation is symmetric
+ * @retval false - relation is not symmetric
  */
 bool relation_symmetric(struct relation* r) {
     // Loop around all relation nodes
@@ -776,8 +776,8 @@ bool relation_symmetric(struct relation* r) {
  * @brief Find out if relation is symmetric
  *
  * @param r Relation - sorted
- * @retval true relation is antisymmetric
- * @retval false relation is not antisymmetric
+ * @retval true - relation is antisymmetric
+ * @retval false - relation is not antisymmetric
  */
 bool relation_antisymmetric(struct relation* r) {
     // Loop around all relation nodes
@@ -798,8 +798,8 @@ bool relation_antisymmetric(struct relation* r) {
  * @brief Find out if relation is transitive
  *
  * @param r Relation - sorted
- * @retval true relation is transitive
- * @retval false relation is not transitive
+ * @retval true - relation is transitive
+ * @retval false - relation is not transitive
  */
 bool relation_transitive(struct relation* r) {
     // Transitive relation: (aRb & bRa) => aRc
@@ -833,8 +833,8 @@ bool relation_transitive(struct relation* r) {
  * @brief Find out if relation is a function
  *
  * @param r Relation - sorted
- * @retval true relation is a function
- * @retval false relation is not a function
+ * @retval true - relation is a function
+ * @retval false - relation is not a function
  */
 bool relation_function(struct relation* r) {
     // Loops around all elemnts - 1
@@ -940,9 +940,19 @@ struct set* relation_codomain(struct relation* r) {
     return codomain;
 }
 
+/**
+ * @brief Find out if relation is injective
+ * 
+ * @param r Relation sorted
+ * @retval true - relation is injective
+ * @retval false - relation is not injective
+ */
 bool relation_injective(struct relation* r) {
+    // Loop around all nodes
     for (int i = 0; i < r->size; i++) {
+        // Loop around all remaining nodes
         for (int j = i + 1; j < r->size; j++) {
+            // If current node has first or second element same as one of the remaining nodes => not injective
             if ((r->nodes[i].a == r->nodes[j].a) ||
                 (r->nodes[i].b == r->nodes[j].b)) {
                 return false;
@@ -952,8 +962,17 @@ bool relation_injective(struct relation* r) {
     return true;
 }
 
+/**
+ * @brief Find out if relation is surjective
+ * 
+ * @param r Relation - sorted
+ * @return true - relation is surjective
+ * @return false - relation is not surjective
+ */
 bool relation_surjective(struct relation* r) {
+    // Loop around all nodes
     for (int i = 1; i < r->size; i++) {
+        // If current node is same as next node => relation is not surjective
         if (r->nodes[i].a == r->nodes[i - 1].a) {
             return false;
         }
@@ -961,7 +980,15 @@ bool relation_surjective(struct relation* r) {
     return true;
 }
 
+/**
+ * @brief Find out if relation is bijective
+ * 
+ * @param r Relation - sorted
+ * @retval true - relation is bijective 
+ * @return false - relation is not bijective
+ */
 bool relation_bijective(struct relation* r) {
+    // Relation is bijective if relation is injective and surjective
     return relation_injective(r) && relation_surjective(r);
 }
 
