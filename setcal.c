@@ -462,40 +462,36 @@ void set_card(struct set* a) {
  * @return Pointer to new set
  */
 struct set* set_complement(struct set* a, struct universe* u) {
-    // Allocate memory complement set
+    // Memory allocation for set
     struct set* complement = malloc(sizeof(struct set));
     if (complement == NULL) {
         return NULL;
     }
     complement->size = 0;
+
     int size = (u->size - a->size) * sizeof(int);
+    // If set is same as universum => complement is empty
     if (size == 0) {
         complement->nodes = NULL;
         return complement;
     }
+
+    // Memory allocation for set nodes
     complement->nodes = malloc(size);
     if (complement->nodes == NULL) {
         free(complement);
         return NULL;
     }
 
-    int i = 0, k = 0;
-    // If given set is empty, make a copy of universe
-    if (a->size > 0) {
-        while (i < u->size) {
-            if (i == a->nodes[k]) {
-                k++;
-                i++;
-                continue;
-            }
-            complement->nodes[complement->size++] = i;
-            i++;
+    // Loop around all universum nodes
+    for (int i = 0, k = 0; i < u->size; i++) {
+        // If universum node is in given set => skip adding that node into complement
+        if (k < a->size && i == a->nodes[k]) {
+            k++;
+            continue;
         }
-    } else {
-        for (int i = 0; i < u->size; i++) {
-            complement->nodes[i] = i;
-            complement->size++;
-        }
+        // Adds universum node into complement
+        complement->nodes[complement->size++] = i;
     }
     return complement;
 }
