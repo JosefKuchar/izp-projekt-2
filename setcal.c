@@ -25,6 +25,10 @@
 
 // Define maximum command arguments
 #define MAX_COMMAND_ARGUMENTS 3
+
+// Define initial allocation sizes
+#define INITIAL_STORE_ALLOC 10
+
 #pragma endregion
 #pragma region ENUMS
 /*---------------------------------- ENUMS ----------------------------------*/
@@ -236,6 +240,17 @@ int get_argument_count(enum function_input input_type) {
     }
     return 1;
 }
+
+/**
+ * Error printing function
+ * @param message Error message
+ * @return Always false for simple usage
+ */
+bool error(const char* message) {
+    fprintf(stderr, "%s", message);
+    return false;
+}
+
 #pragma endregion
 #pragma region VALIDATIONS
 /*------------------------------- VALIDATIONS -------------------------------*/
@@ -267,15 +282,13 @@ bool universe_valid(struct universe* u) {
         // Loop around all illegal words
         for (int j = 0; j < size; j++) {
             if (strcmp(u->nodes[i], illegal[j]) == 0) {
-                fprintf(stderr, "Illegal word inside universe!\n");
-                return false;
+                return error("Illegal word inside universe!\n");
             }
         }
         // Check for repeated word
         for (int j = i + 1; j < u->size; j++) {
             if (strcmp(u->nodes[i], u->nodes[j]) == 0) {
-                fprintf(stderr, "Repeated word inside universe!\n");
-                return false;
+                return error("Repeated word inside universe!\n");
             }
         }
     }
@@ -293,8 +306,7 @@ bool set_valid(struct set* a) {
     for (int i = 1; i < a->size; i++) {
         // If last item is same as current then this set is invalid
         if (a->nodes[i] == a->nodes[i - 1]) {
-            fprintf(stderr, "Repeated item inside set!\n");
-            return false;
+            return error("Repeated item inside set!\n");
         }
     }
     // If we didn't find two same elements then this set is valid
@@ -312,8 +324,7 @@ bool relation_valid(struct relation* r) {
         // If last item is same as current then this relation is invalid
         if (r->nodes[i].a == r->nodes[i - 1].a &&
             r->nodes[i].b == r->nodes[i - 1].b) {
-            fprintf(stderr, "Repeated item inside relation");
-            return false;
+            return error("Repeated item inside relation");
         }
     }
     // If we didn't find two same relation nodes then this set is valid
@@ -1229,8 +1240,7 @@ bool select_command(struct store_node* node, struct universe* u) {
         case RELATION:
             return select_random_from_relation(node->obj, u);
         default:
-            fprintf(stderr, "Invalid node type!\n");
-            return false;
+            return error("Invalid node type!\n");
     }
 }
 #pragma endregion
@@ -1442,8 +1452,7 @@ bool run_command(struct command* command, struct store* store, int* i) {
     struct command_def def = COMMAND_DEFS[command->type];
 
     if (!command_arguments_valid(command, store, def)) {
-        fprintf(stderr, "Invalid command arguments!\n");
-        return false;
+        return error("Invalid command arguments!\n");
     }
 
     void* result = process_function_input(store, command, def);
@@ -1478,8 +1487,7 @@ bool store_runner(struct store* store) {
             case COMMAND:
                 // Command can modify program counter
                 if (!run_command(store->nodes[i].obj, store, &i)) {
-                    fprintf(stderr, "Error running command!\n");
-                    return false;
+                    return error("Error running command!\n");
                 };
                 break;
         }
@@ -1503,13 +1511,11 @@ bool parse_line_number(char* string, int* result) {
 
     // Check if string starts with number, also check if it ends with number
     if (end_p == string || *end_p != '\0') {
-        fprintf(stderr, "Invalid characters inside number!\n");
-        return false;
+        return error("Invalid characters inside number!\n");
     }
     // Check if number is positive
     if (number <= 0) {
-        fprintf(stderr, "Invalid line number!\n");
-        return false;
+        return error("Invalid line number!\n");
     }
     // Clamp number to INT_MAX
     if (number > (long)INT_MAX) {
@@ -1548,13 +1554,11 @@ bool parse_universe(FILE* fp, struct universe* u) {
             continue;
             // Handle invalid characters
         } else if (!isalpha(c)) {
-            fprintf(stderr, "Invalid character in universum\n");
-            return false;
+            return error("Invalid character in universum\n");
         }
 
         if (index >= MAX_STRING_LENGTH) {
-            fprintf(stderr, "Element name too long!\n");
-            return false;
+            return error("Element name too long!\n");
         }
 
         u->nodes[u->size - 1][index] = c;
@@ -1598,8 +1602,7 @@ bool parse_set(FILE* fp, struct set* s, struct universe* u) {
                 // If the iteration is the last one => set node wasn't found in
                 // universe
                 if (i == max - 1) {
-                    fprintf(stderr, "S Set node is not in universe.\n");
-                    return false;
+                    return error("S Set node is not in universe.\n");
                 }
             }
             // If character is EOF or newline we can end parsing
@@ -1611,8 +1614,7 @@ bool parse_set(FILE* fp, struct set* s, struct universe* u) {
         }
 
         if (index >= MAX_STRING_LENGTH) {
-            fprintf(stderr, "Element name too long!\n");
-            return false;
+            return error("Element name too long!\n");
         }
 
         node[index] = c;
@@ -1660,17 +1662,15 @@ bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
                         // If the iteration is the last one => relation node
                         // wasn't found in universe
                         if (i == max - 1) {
-                            fprintf(stderr,
-                                    "S Relation node is not in universe.\n");
-                            return false;
+                            return error(
+                                "S Relation node is not in universe.\n");
                         }
                     }
                     continue;
                 }
 
                 if (index >= MAX_STRING_LENGTH) {
-                    fprintf(stderr, "Element name too long!\n");
-                    return false;
+                    return error("Element name too long!\n");
                 }
 
                 node[index] = c;
@@ -1774,14 +1774,12 @@ bool process_universe(FILE* fp, struct store* store, bool empty) {
 
     // Parse universe
     if (!parse_universe(fp, store->universe)) {
-        fprintf(stderr, "Error parsing universe!\n");
-        return false;
+        return error("Error parsing universe!\n");
     }
 
     // Check if universe is valid
     if (!universe_valid(store->universe)) {
-        fprintf(stderr, "Invalid universe!\n");
-        return false;
+        return error("Invalid universe!\n");
     }
 
     // Generate set from universe
@@ -1790,8 +1788,7 @@ bool process_universe(FILE* fp, struct store* store, bool empty) {
 
     // Check malloc error
     if (store->nodes[index].obj == NULL) {
-        fprintf(stderr, "Malloc error!\n");
-        return false;
+        return error("Malloc error!\n");
     }
 
     store->size++;
@@ -1821,8 +1818,7 @@ bool process_set(FILE* fp, struct store* store, bool empty) {
 
     // Handle parsing
     if (!parse_set(fp, store->nodes[index].obj, store->universe)) {
-        fprintf(stderr, "Error parsing set!\n");
-        return false;
+        return error("Error parsing set!\n");
     }
 
     // Sort set
@@ -1854,8 +1850,7 @@ bool process_relation(FILE* fp, struct store* store, bool empty) {
 
     // Parse relation
     if (!parse_relation(fp, store->nodes[index].obj, store->universe)) {
-        fprintf(stderr, "Error parsing relation!\n");
-        return false;
+        return error("Error parsing relation!\n");
     }
 
     // Sort relation
@@ -1874,8 +1869,7 @@ bool process_relation(FILE* fp, struct store* store, bool empty) {
 bool process_command(FILE* fp, struct store* store, bool empty) {
     // Command can't be empty
     if (empty) {
-        fprintf(stderr, "Command can't be empty!");
-        return false;
+        return error("Command can't be empty!");
     }
 
     int index = store->size;
@@ -1888,8 +1882,7 @@ bool process_command(FILE* fp, struct store* store, bool empty) {
 
     // Parse command
     if (!parse_command(fp, store->nodes[index].obj)) {
-        fprintf(stderr, "Error parsing command\n");
-        return false;
+        return error("Error parsing command\n");
     }
 
     return true;
@@ -1923,8 +1916,7 @@ bool process_line(FILE* fp, char c, struct store* store) {
         case 'C':
             return process_command(fp, store, empty);
         default:
-            fprintf(stderr, "Invalid starting character!\n");
-            return false;
+            return error("Invalid starting character!\n");
     }
 }
 
@@ -1935,23 +1927,31 @@ bool process_line(FILE* fp, char c, struct store* store) {
  * @return True if everything went well
  */
 bool process_file(FILE* fp, struct store* store) {
-    // TODO Realloc store
+    int allocated = INITIAL_STORE_ALLOC;
+
     // Loop around all lines
-    for (int c = 0; (c = getc(fp)) != EOF;) {
+    for (int c = 0, i = 0; (c = getc(fp)) != EOF; i++) {
+        // Realloc store
+        if (i >= allocated) {
+            allocated *= 2;
+            const int new_alloc = allocated * sizeof(struct store_node);
+            store->nodes = srealloc(store->nodes, new_alloc);
+            if (store->nodes == NULL) {
+                return error("Error reallocating store!\n");
+            }
+        }
+
         if (!process_line(fp, c, store)) {
-            fprintf(stderr, "Error parsing file!\n");
-            return false;
+            return error("Error parsing file!\n");
         }
     }
     // Check store validity
     if (!store_valid(store)) {
-        fprintf(stderr, "Invalid definition of file parts!\n");
-        return false;
+        return error("Invalid definition of file parts!\n");
     }
     // Run store
     if (!store_runner(store)) {
-        fprintf(stderr, "Error running commands!\n");
-        return false;
+        return error("Error running commands!\n");
     }
 
     return true;
@@ -1970,7 +1970,7 @@ FILE* open_file(char* filename) {
     fp = fopen(filename, "r");
 
     if (fp == NULL) {
-        fprintf(stderr, "Nepodarilo se otevrit soubor!\n");
+        error("Nepodarilo se otevrit soubor!\n");
         return NULL;
     }
 
@@ -1984,8 +1984,7 @@ FILE* open_file(char* filename) {
  */
 bool close_file(FILE* fp) {
     if (fclose(fp) == EOF) {
-        fprintf(stderr, "Nepodarilo se uzavrit soubor!\n");
-        return false;
+        return error("Nepodarilo se uzavrit soubor!\n");
     } else {
         return true;
     }
@@ -2001,8 +2000,7 @@ bool close_file(FILE* fp) {
  */
 bool check_arguments(int argc) {
     if (argc != 2) {
-        fprintf(stderr, "Nespravny pocet argumentu!\n");
-        return false;
+        return error("Nespravny pocet argumentu!\n");
     } else {
         return true;
     }
@@ -2029,11 +2027,11 @@ int main(int argc, char* argv[]) {
     // Process file
     struct store store;
     store.size = 0;
-    store.nodes = malloc(sizeof(struct store_node) * 1000);
+    store.nodes = malloc(sizeof(struct store_node) * INITIAL_STORE_ALLOC);
     store.universe = NULL;
     if (store.nodes == NULL) {
-        fprintf(stderr, "Malloc error!\n");
-        return false;
+        error("Malloc error!\n");
+        return EXIT_FAILURE;
     }
     if (!process_file(fp, &store)) {
         free_store(&store);
