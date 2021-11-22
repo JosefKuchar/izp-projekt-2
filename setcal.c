@@ -496,7 +496,8 @@ struct set* set_complement(struct set* a, struct universe* u) {
 
     // Loop around all universum nodes
     for (int i = 0, k = 0; i < u->size; i++) {
-        // If universum node is in given set => skip adding that node into complement
+        // If universum node is in given set => skip adding that node into
+        // complement
         if (k < a->size && i == a->nodes[k]) {
             k++;
             continue;
@@ -1574,7 +1575,6 @@ bool parse_set(FILE* fp, struct set* s, struct universe* u) {
     // Allocate memory for one node
     s->nodes = malloc(sizeof(int));
     s->size = 0;
-    // TODO handle overflow
     char node[STRING_BUFFER_SIZE] = {0};
     int index = 0;
 
@@ -1630,7 +1630,6 @@ bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
     // Allocate memory for one node
     r->nodes = malloc(sizeof(struct relation_node));
     r->size = 0;
-    // TODO handle overflow
     char node[STRING_BUFFER_SIZE] = {0};
     int index = 0;
 
@@ -1707,7 +1706,6 @@ bool parse_command(FILE* fp, struct command* command) {
             index = 0;
             if (argument == 0) {
                 // Find command string
-                // TODO
                 bool found = false;
                 int command_count =
                     sizeof(COMMAND_DEFS) / sizeof(COMMAND_DEFS[0]);
