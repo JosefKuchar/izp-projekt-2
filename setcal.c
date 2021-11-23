@@ -103,7 +103,7 @@ struct store {
 /*--------------------------------- SORTING ---------------------------------*/
 
 /**
- * Function to compare two numbers - for qsort
+ * @brief Function to compare two numbers - for qsort
  * @param a Pointer to first number
  * @param b Pointer to second number
  * @return Differece between two numbers
@@ -113,7 +113,7 @@ int compare_num_nodes(const void* a, const void* b) {
 }
 
 /**
- * Function to compare two relation nodes
+ * @brief Function to compare two relation nodes
  * @param a Pointer to first relation node
  * @param b Pointer to second relation node
  * @return Difference between two relation nodes
@@ -133,16 +133,18 @@ int compare_rel_nodes(const void* a, const void* b) {
 }
 
 /**
- * Sort set
+ * @brief Sort set
  * @param s Set
+ * @return Sorted set (ascending)
  */
 void set_sort(struct set* s) {
     qsort(s->nodes, s->size, sizeof(int), compare_num_nodes);
 }
 
 /**
- * Sort relation
+ * @brief Sort relation
  * @param r Relation
+ * @return Sorted relation (ascending)
  */
 void relation_sort(struct relation* r) {
     qsort(r->nodes, r->size, sizeof(struct relation_node), compare_rel_nodes);
@@ -152,7 +154,7 @@ void relation_sort(struct relation* r) {
 /*----------------------------- HELPER FUNCTIONS ----------------------------*/
 
 /**
- * Realloc that automatically frees old block when fails
+ * @brief Realloc that automatically frees old block when fails
  * @param block Existing memory block
  * @param size New size
  * @return Pointer to newly allocated memory, NULL when fails
@@ -169,7 +171,7 @@ void* srealloc(void* block, size_t size) {
 }
 
 /**
- * Find minimum of two numbers (integers)
+ * @brief Find minimum of two numbers (integers)
  * @param a First number
  * @param b Second number
  * @return Minimum of two numbers
@@ -179,7 +181,7 @@ int get_min(int a, int b) {
 }
 
 /**
- * Find maximum of two numbers (integers)
+ * @brief Find maximum of two numbers (integers)
  * @param a First number
  * @param b Second number
  * @return Maximum of two numbers
@@ -189,7 +191,7 @@ int get_max(int a, int b) {
 }
 
 /**
- * Generate universe from set
+ * @brief Generate universe from set
  * @param universe Universe
  * @return Set if everything went correctly, null if malloc failed
  */
@@ -221,7 +223,7 @@ struct set* get_set_from_universe(struct universe* universe) {
 }
 
 /**
- * Get number of arguments from input type
+ * @brief Get number of arguments from input type
  * @param input_type Input type
  * @return Number of arguments
  */
@@ -242,7 +244,7 @@ int get_argument_count(enum function_input input_type) {
 }
 
 /**
- * Error printing function
+ * @brief Error printing function
  * @param message Error message
  * @return Always false for simple usage
  */
@@ -256,9 +258,10 @@ bool error(const char* message) {
 /*------------------------------- VALIDATIONS -------------------------------*/
 
 /**
- * Check if universe is valid (doesn't contain reserved words, same words)
+ * @brief Check if universe is valid (doesn't contain reserved words, same words)
  * @param u Universe
- * @return True if universe is valid
+ * @retval true - Universe valid
+ * @retval false - Universe invalid
  */
 bool universe_valid(struct universe* u) {
     // Define all illegal words inside universe
@@ -297,9 +300,10 @@ bool universe_valid(struct universe* u) {
 }
 
 /**
- * Check if set is valid
+ * @brief Check if set is valid
  * @param s Set - sorted
- * @return True if set is valid
+ * @retval true - Set valid
+ * @retval false - Set invalid
  */
 bool set_valid(struct set* a) {
     // Loop around all elements inside set
@@ -314,9 +318,10 @@ bool set_valid(struct set* a) {
 }
 
 /**
- * Check if relation is valid
+ * @brief Check if relation is valid
  * @param r Relation - sorted
- * @return True if relation is valid
+ * @retval true - Relation valid
+ * @retval false - Relation invalid
  */
 bool relation_valid(struct relation* r) {
     // Loop around all elements inside relation
@@ -331,6 +336,14 @@ bool relation_valid(struct relation* r) {
     return true;
 }
 
+/**
+ * @brief Check if arguments of command are valid
+ * @param command command
+ * @param store store
+ * @param def command definition
+ * @retval true - Command arguments valid
+ * @retval false - Command arguments invalid
+ */
 bool command_arguments_valid(struct command* command,
                              struct store* store,
                              struct command_def def) {
@@ -372,9 +385,10 @@ bool command_arguments_valid(struct command* command,
 }
 
 /**
- * Check if store is valid (correct order of node types)
+ * @brief Check if store is valid (correct order of node types)
  * @param store Store
- * @return True if store is valid
+ * @retval true - Store valid
+ * @retval false - Store invalid
  */
 bool store_valid(struct store* store) {
     // Ensure good order of node types
@@ -403,7 +417,7 @@ bool store_valid(struct store* store) {
 /*----------------------------- PRINT FUNCTIONS -----------------------------*/
 
 /**
- * Print bool value
+ * @brief Print bool value
  * @param b bool to be printed
  */
 void print_bool(bool b) {
@@ -415,7 +429,7 @@ void print_bool(bool b) {
 }
 
 /**
- * Print set
+ * @brief Print set
  * @param a Set
  * @param u Universe
  */
@@ -431,7 +445,7 @@ void print_set(struct set* a, struct universe* u, bool is_universe) {
 }
 
 /**
- * Print relation
+ * @brief Print relation
  * @param r Relation
  * @param u Universe
  */
@@ -450,7 +464,7 @@ void print_relation(struct relation* r, struct universe* u) {
 /*------------------------------ SET FUNCTIONS ------------------------------*/
 
 /**
- * Set empty function
+ * @brief Check if set is empty
  * @param a Set
  * @return True if set is empty
  */
@@ -459,7 +473,7 @@ bool set_empty(struct set* a) {
 }
 
 /**
- * Prints size of set
+ * @brief Prints size of set
  * @param a Set
  */
 void set_card(struct set* a) {
@@ -467,7 +481,7 @@ void set_card(struct set* a) {
 }
 
 /**
- * Set complement function
+ * @brief Create set complement
  * @param a Set - sorted
  * @param u Universe
  * @return Pointer to new set
@@ -509,7 +523,7 @@ struct set* set_complement(struct set* a, struct universe* u) {
 }
 
 /**
- * Set union function
+ * @brief Find union of two sets
  * @param a First set - sorted
  * @param b Second set - sorted
  * @return Pointer to new set
@@ -573,7 +587,7 @@ struct set* set_union(struct set* a, struct set* b) {
 }
 
 /**
- * Set intersect function
+ * @brief Find intersect of two sets
  * @param a Set - sorted
  * @param b Set - sorted
  * @return Pointer to new set
@@ -611,7 +625,7 @@ struct set* set_intersect(struct set* a, struct set* b) {
 }
 
 /**
- * Set minus function
+ * @brief Finds difference between two sets
  * @param a Set - sorted
  * @param b Set - sorted
  * @return Pointer to new set
@@ -658,10 +672,11 @@ struct set* set_minus(struct set* a, struct set* b) {
 }
 
 /**
- * Set subseteq function
+ * @brief Set subseteq function
  * @param a Set - sorted
  * @param b Set - sorted
- * @return True if a is subset of b or equal to b
+ * @retval true - Set a is subset of b or equal to b
+ * @retval false - Set a isn't subset of b or equal to b
  */
 bool set_subseteq(struct set* a, struct set* b) {
     int k = 0;
@@ -677,10 +692,11 @@ bool set_subseteq(struct set* a, struct set* b) {
 }
 
 /**
- * Set subset function
+ * @brief Set subset function
  * @param a Set - sorted
  * @param b Set - sorted
- * @return True if a is subset of b
+ * @retval true - Set a is subset of b
+ * @retval false - Set a isn't subset of b
  */
 bool set_subset(struct set* a, struct set* b) {
     int k = 0;
@@ -696,10 +712,11 @@ bool set_subset(struct set* a, struct set* b) {
 }
 
 /**
- * Compare two sets
+ * @brief Compare two sets
  * @param a First set - sorted
  * @param b Second set - sorted
- * @return True if sets are equal
+ * @retval true - sets are equal
+ * @retval false - sets aren't equal
  */
 bool set_equals(struct set* a, struct set* b) {
     // If sets have different sizes they are different
@@ -722,10 +739,11 @@ bool set_equals(struct set* a, struct set* b) {
 /*--------------------------- RELATION FUNCTIONS ----------------------------*/
 
 /**
- * Find out if relation is reflexive
+ * @brief Find out if relation is reflexive
  * @param r Relation - sorted
  * @param u Universe - sorted
- * @return True if relation is reflexive
+ * @retval true - Relation is reflexive
+ * @retval false - Relation isn't reflexive
  */
 bool relation_reflexive(struct relation* r, struct universe* u) {
     bool reflex_for_i;
@@ -752,7 +770,6 @@ bool relation_reflexive(struct relation* r, struct universe* u) {
             }
         }
 
-        // Relation isn't reflexive
         if (!reflex_for_i) {
             return false;
         }
@@ -765,8 +782,8 @@ bool relation_reflexive(struct relation* r, struct universe* u) {
  * @brief Find out if relation is symmetric
  *
  * @param r Relation - sorted
- * @retval true - relation is symmetric
- * @retval false - relation is not symmetric
+ * @retval true - Relation is symmetric
+ * @retval false - Relation is not symmetric
  */
 bool relation_symmetric(struct relation* r) {
     // Loop around all relation nodes
@@ -792,8 +809,8 @@ bool relation_symmetric(struct relation* r) {
  * @brief Find out if relation is symmetric
  *
  * @param r Relation - sorted
- * @retval true - relation is antisymmetric
- * @retval false - relation is not antisymmetric
+ * @retval true - Relation is antisymmetric
+ * @retval false - Relation is not antisymmetric
  */
 bool relation_antisymmetric(struct relation* r) {
     // Loop around all relation nodes
@@ -814,8 +831,8 @@ bool relation_antisymmetric(struct relation* r) {
  * @brief Find out if relation is transitive
  *
  * @param r Relation - sorted
- * @retval true - relation is transitive
- * @retval false - relation is not transitive
+ * @retval true - Relation is transitive
+ * @retval false - Relation is not transitive
  */
 bool relation_transitive(struct relation* r) {
     // Transitive relation: (aRb & bRa) => aRc
@@ -849,8 +866,8 @@ bool relation_transitive(struct relation* r) {
  * @brief Find out if relation is a function
  *
  * @param r Relation - sorted
- * @retval true - relation is a function
- * @retval false - relation is not a function
+ * @retval true - Relation is a function
+ * @retval false - Relation is not a function
  */
 bool relation_function(struct relation* r) {
     // Loops around all elemnts - 1
@@ -961,8 +978,8 @@ struct set* relation_codomain(struct relation* r) {
  * @brief Find out if relation is injective
  *
  * @param r Relation sorted
- * @retval true - relation is injective
- * @retval false - relation is not injective
+ * @retval true - Relation is injective
+ * @retval false - Relation is not injective
  */
 bool relation_injective(struct relation* r) {
     // Loop around all nodes
@@ -984,8 +1001,8 @@ bool relation_injective(struct relation* r) {
  * @brief Find out if relation is surjective
  *
  * @param r Relation - sorted
- * @return true - relation is surjective
- * @return false - relation is not surjective
+ * @return true - Relation is surjective
+ * @return false - Relation is not surjective
  */
 bool relation_surjective(struct relation* r) {
     // Loop around all nodes
@@ -1002,8 +1019,8 @@ bool relation_surjective(struct relation* r) {
  * @brief Find out if relation is bijective
  *
  * @param r Relation - sorted
- * @retval true - relation is bijective
- * @return false - relation is not bijective
+ * @retval true - Relation is bijective
+ * @return false - Relation is not bijective
  */
 bool relation_bijective(struct relation* r) {
     // Relation is bijective if relation is injective and surjective
@@ -1011,7 +1028,7 @@ bool relation_bijective(struct relation* r) {
 }
 
 /**
- * Create reflexive relation closure
+ * @brief Create reflexive relation closure
  * @param r Relation - sorted
  * @param u Universe - sorted
  * @return Pointer to sorted relation closure
@@ -1069,7 +1086,7 @@ struct relation* relation_closure_ref(struct relation* r, struct universe* u) {
 }
 
 /**
- * Create symmetric relation closure
+ * @brief Create symmetric relation closure
  * @param r Relation - sorted
  * @param u Universe - sorted
  * @return Pointer to symmetric relation closure
@@ -1116,7 +1133,7 @@ struct relation* relation_closure_sym(struct relation* r) {
 }
 
 /**
- * Create transitive relation closure
+ * @brief Create transitive relation closure
  * @param r Relation - sorted
  * @param u Universe - sorted
  * @return Pointer to transitive relation closure
