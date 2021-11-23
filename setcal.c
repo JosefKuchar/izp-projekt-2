@@ -632,42 +632,44 @@ struct set* set_intersect(struct set* a, struct set* b) {
  * @return Pointer to new set
  */
 struct set* set_minus(struct set* a, struct set* b) {
-    // Allocate memory minus set
+    // Memory allocation for set
     struct set* minus = malloc(sizeof(struct set));
     if (minus == NULL) {
         return NULL;
     }
     minus->size = 0;
+
     int size = a->size * sizeof(int);
+    // If set A is empty => minus is empty
     if (size == 0) {
         minus->nodes = NULL;
         return minus;
     }
+
+    // Memory allocation for set nodes
     minus->nodes = malloc(size);
     if (minus->nodes == NULL) {
         free(minus);
         return NULL;
     }
 
-    if (b->size == 0) {
-        for (int i = 0; i < a->size; i++) {
-            minus->nodes[i] = a->nodes[i];
-            minus->size++;
-        }
-
-        return minus;
-    }
-
+    // Starting indexes of sets A and B
     int i = 0, k = 0;
+    // Loop around all nodes from set A
     while (i < a->size) {
-        if (k > b->size || a->nodes[i] < b->nodes[k]) {
-            minus->nodes[minus->size++] = a->nodes[i++];
-        } else if (a->nodes[i] == b->nodes[k]) {
-            i++;
+        // Check if k index is smaller than size of set B and if node from set B
+        // is smaller or equal to node from set A => skip adding node
+        if (k < b->size && b->nodes[k] <= a->nodes[i]) {
+            // If nodes are equal => increment index of set A
+            if (b->nodes[k] == a->nodes[i]) {
+                i++;
+            }
+            // increment index of set A
             k++;
-        } else {
-            k++;
+            continue;
         }
+        // Adds node from set A
+        minus->nodes[minus->size++] = a->nodes[i++];
     }
     return minus;
 }
