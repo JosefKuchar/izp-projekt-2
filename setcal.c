@@ -939,7 +939,8 @@ struct set* relation_domain(struct relation* r) {
  * @brief Relation codomain function
  *
  * @param r Relation - sorted
- * @return Pointer to a new set
+ * @retval Set pointer - relation codomain set
+ * @retval NULL - Function failed
  */
 struct set* relation_codomain(struct relation* r) {
     // Memory allocation for set
@@ -1039,8 +1040,8 @@ bool relation_bijective(struct relation* r) {
  * @brief Create reflexive relation closure
  * @param r Relation - sorted
  * @param u Universe - sorted
- * @return Pointer to sorted relation closure
- * or NULL if didn't execute correctly
+ * @retval Relation pointer - Reflexive relation closure
+ * @retval NULL - Function failed
  */
 struct relation* relation_closure_ref(struct relation* r, struct universe* u) {
     // Allocate memory for result relation, which is a copy of original
@@ -1097,8 +1098,8 @@ struct relation* relation_closure_ref(struct relation* r, struct universe* u) {
  * @brief Create symmetric relation closure
  * @param r Relation - sorted
  * @param u Universe - sorted
- * @return Pointer to symmetric relation closure
- * or NULL if didn't execute correctly
+ * @retval Relation pointer - Symmetric relation closure
+ * @retval NULL - Function failed
  */
 struct relation* relation_closure_sym(struct relation* r) {
     // Create a copy of original relation where additional nodes can be added
@@ -1144,8 +1145,8 @@ struct relation* relation_closure_sym(struct relation* r) {
  * @brief Create transitive relation closure
  * @param r Relation - sorted
  * @param u Universe - sorted
- * @return Pointer to transitive relation closure
- * or NULL if didn't execute correctly
+ * @retval Relation pointer - Transitive relation closure
+ * @retval NULL - Function failed
  */
 struct relation* relation_closure_trans(struct relation* r) {
     // Create a copy of the original relation
@@ -1206,10 +1207,11 @@ struct relation* relation_closure_trans(struct relation* r) {
 /*---------------------------- SPECIAL COMMANDS -----------------------------*/
 
 /**
- * Select random item from set
+ * @brief Select random item from set
  * @param s Set
  * @param u Universe
- * @return True if set is not empty
+ * @retval true - Item selected successfully
+ * @retval false - Set is empty
  */
 bool select_random_from_set(struct set* s, struct universe* u) {
     // Check if set is empty
@@ -1227,10 +1229,11 @@ bool select_random_from_set(struct set* s, struct universe* u) {
 }
 
 /**
- * Select random item from relation
+ * @brief Select random item from relation
  * @param r Relation
  * @param u Universe
- * @return True if relation is not empty
+ * @retval true - Item selected successfully
+ * @retval false - Relation is empty
  */
 bool select_random_from_relation(struct relation* r, struct universe* u) {
     // Check if relation is empty
@@ -1250,10 +1253,11 @@ bool select_random_from_relation(struct relation* r, struct universe* u) {
 }
 
 /**
- * Select command
+ * @brief Select command
  * @param node Node from universe (set or relation)
  * @param u Universe
- * @return True if node is not empty
+ * @retval true - Item selected successfully
+ * @retval false - Node is empty
  */
 bool select_command(struct store_node* node, struct universe* u) {
     switch (node->type) {
@@ -1270,7 +1274,7 @@ bool select_command(struct store_node* node, struct universe* u) {
 /*------------------------ MEMORY FREEING FUNCTIONS -------------------------*/
 
 /**
- * Free universe struct
+ * @brief Free universe struct
  * @param u Universe
  */
 void free_universe(struct universe* u) {
@@ -1281,7 +1285,7 @@ void free_universe(struct universe* u) {
 }
 
 /**
- * Free set struct
+ * @brief Free set struct
  * @param s Set
  */
 void free_set(struct set* s) {
@@ -1292,7 +1296,7 @@ void free_set(struct set* s) {
 }
 
 /**
- * Free relation struct
+ * @brief Free relation struct
  * @param r Relation
  */
 void free_relation(struct relation* r) {
@@ -1303,7 +1307,7 @@ void free_relation(struct relation* r) {
 }
 
 /**
- * Free command struct
+ * @brief Free command struct
  * @param c Command
  */
 void free_command(struct command* c) {
@@ -1311,7 +1315,7 @@ void free_command(struct command* c) {
 }
 
 /**
- * Free store from memory including all children
+ * @brief Free store from memory including all children
  * @param store Pointer to store
  */
 void free_store(struct store* store) {
@@ -1367,9 +1371,10 @@ const struct command_def COMMAND_DEFS[] = {
 /*------------------------------- STORE RUNNER ------------------------------*/
 
 /**
- * Function for procesing bool ouput
+ * @brief Function for procesing bool ouput
  * @param r Result - bool
- * @return True if no error occurred
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_output_bool(bool r,
                          enum function_input input,
@@ -1392,11 +1397,12 @@ bool process_output_bool(bool r,
 }
 
 /**
- * Function for processing set output
+ * @brief Function for processing set output
  * @param s Store
  * @param r Result - relation
  * @param i Program counter
- * @return True if no error occurred
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_output_relation(struct store* s, struct relation* r, int i) {
     // Check if function actually returned valid object
@@ -1416,11 +1422,12 @@ bool process_output_relation(struct store* s, struct relation* r, int i) {
 }
 
 /**
- * Function for processing set output
+ * @brief Function for processing set output
  * @param s Store
  * @param r Result - set
  * @param i Program counter
- * @return True if no error occurred
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_output_set(struct store* s, struct set* r, int i) {
     // Check if function actually returned valid object
@@ -1439,6 +1446,14 @@ bool process_output_set(struct store* s, struct set* r, int i) {
     return true;
 }
 
+/**
+ * @brief Execute function that corresponds
+ * to the given command and return pointer to the result 
+ * @param s Store
+ * @param c Command
+ * @param def Command definition
+ * @return void pointer to result of command function
+ */
 void* process_function_input(struct store* s,
                              struct command* c,
                              struct command_def def) {
@@ -1465,10 +1480,12 @@ void* process_function_input(struct store* s,
 }
 
 /**
- * Function for running commands
+ * @brief Function for running commands
  * @param command Command
  * @param store Store
  * @param i Program counter
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool run_command(struct command* command, struct store* store, int* i) {
     struct command_def def = COMMAND_DEFS[command->type];
@@ -1493,9 +1510,10 @@ bool run_command(struct command* command, struct store* store, int* i) {
 }
 
 /**
- * Function for running all things on store
+ * @brief Function for running all things inside store
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool store_runner(struct store* store) {
     for (int i = 0; i < store->size; i++) {
@@ -1522,10 +1540,11 @@ bool store_runner(struct store* store) {
 /*------------------------------- FILE PARSING ------------------------------*/
 
 /**
- * Parse line number
+ * @brief Parse line number
  * @param string String to be parsed
  * @param result Result
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool parse_line_number(char* string, int* result) {
     char* end_p;
@@ -1550,10 +1569,11 @@ bool parse_line_number(char* string, int* result) {
 }
 
 /**
- * Parse universe from file stream
+ * @brief Parse universe from file stream
  * @param fp File pointer
  * @param u Universe
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool parse_universe(FILE* fp, struct universe* u) {
     // Allocate memory for 1 node
@@ -1591,11 +1611,12 @@ bool parse_universe(FILE* fp, struct universe* u) {
 }
 
 /**
- * Parse set from file stream
+ * @brief Parse set from file stream
  * @param fp File pointer
  * @param u Universe
- * @return True if everything went well
- * */
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
+ */
 bool parse_set(FILE* fp, struct set* s, struct universe* u) {
     // Allocate memory for one node
     s->nodes = malloc(sizeof(int));
@@ -1645,11 +1666,12 @@ bool parse_set(FILE* fp, struct set* s, struct universe* u) {
 }
 
 /**
- * Parse relation from file stream
+ * @brief Parse relation from file stream
  * @param fp File pointer
  * @param r Relation
  * @param u Universe
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  * */
 bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
     // Allocate memory for one node
@@ -1710,10 +1732,11 @@ bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
 }
 
 /**
- * Parse command
+ * @brief Parse command
  * @param fp File pointer
  * @param c Command
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool parse_command(FILE* fp, struct command* command) {
     // TODO handle overflow
@@ -1769,10 +1792,11 @@ bool parse_command(FILE* fp, struct command* command) {
 }
 
 /**
- * Process universe
+ * @brief Process universe
  * @param fp File pointer
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_universe(FILE* fp, struct store* store, bool empty) {
     int index = store->size;
@@ -1816,10 +1840,11 @@ bool process_universe(FILE* fp, struct store* store, bool empty) {
 }
 
 /**
- * Process set
+ * @brief Process set
  * @param fp File pointer
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_set(FILE* fp, struct store* store, bool empty) {
     int index = store->size;
@@ -1848,10 +1873,11 @@ bool process_set(FILE* fp, struct store* store, bool empty) {
 }
 
 /**
- * Process relation
+ * @brief Process relation
  * @param fp File pointer
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_relation(FILE* fp, struct store* store, bool empty) {
     int index = store->size;
@@ -1880,10 +1906,11 @@ bool process_relation(FILE* fp, struct store* store, bool empty) {
 }
 
 /**
- * Process command
+ * @brief Process command
  * @param fp File pointer
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_command(FILE* fp, struct store* store, bool empty) {
     // Command can't be empty
@@ -1908,11 +1935,12 @@ bool process_command(FILE* fp, struct store* store, bool empty) {
 }
 
 /**
- * Process one line
+ * @brief Process one line
  * @param fp File pointer
  * @param c Starting character
  * @param store Store
- * @return True if line was parsed correctly
+ * @retval true - Line was parsed correctly
+ * @retval false - Line wasn't passed correctly
  */
 bool process_line(FILE* fp, char c, struct store* store) {
     int next = getc(fp);
@@ -1940,10 +1968,11 @@ bool process_line(FILE* fp, char c, struct store* store) {
 }
 
 /**
- * Process all lines in file
+ * @brief Process all lines in file
  * @param fp File pointer
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_file(FILE* fp, struct store* store) {
     int allocated = INITIAL_STORE_ALLOC;
@@ -1980,9 +2009,10 @@ bool process_file(FILE* fp, struct store* store) {
 /*---------------------------- FILE MANIPULATION ----------------------------*/
 
 /**
- * Open file
+ * @brief Open file
  * @param filename File name
- * @return File pointer if file was opened successfully, NULL otherwise
+ * @retval File pointer if file was opened successfully
+ * @retval NULL - Error when opening file
  */
 FILE* open_file(char* filename) {
     FILE* fp;
@@ -1997,9 +2027,10 @@ FILE* open_file(char* filename) {
 }
 
 /**
- * Close file
+ * @brief Close file
  * @param fp File pointer
- * @return True if file was successfully closed
+ * @retval true - file was closed successfully
+ * @retval false - Error when closing file
  */
 bool close_file(FILE* fp) {
     if (fclose(fp) == EOF) {
