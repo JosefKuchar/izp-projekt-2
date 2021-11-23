@@ -682,15 +682,17 @@ struct set* set_minus(struct set* a, struct set* b) {
  * @retval false - Set a isn't subset of b or equal to b
  */
 bool set_subseteq(struct set* a, struct set* b) {
+    // Index of set A
     int k = 0;
-    for (int i = 0; i < b->size; i++) {
-        if (k == a->size) {
-            break;
-        }
+    // Loop around all nodes from set B or until all nodes from set A were
+    // found in set B
+    for (int i = 0; i < b->size && k < a->size; i++) {
+        //  Check if node from set A is in set B => increment index of set A
         if (b->nodes[i] == a->nodes[k]) {
             k++;
         }
     }
+    // If the index of set A is the same as size of set A => is subseteq
     return (k == a->size);
 }
 
@@ -702,15 +704,18 @@ bool set_subseteq(struct set* a, struct set* b) {
  * @retval false - Set a isn't subset of b
  */
 bool set_subset(struct set* a, struct set* b) {
+    // Index of set A
     int k = 0;
-    for (int i = 0; i < b->size; i++) {
-        if (k == a->size) {
-            break;
-        }
+    // Loop around all nodes from set B or until all nodes from set A were
+    // found in set B
+    for (int i = 0; i < b->size && k < a->size; i++) {
+        //  Check if node from set A is in set B => increment index of set A
         if (b->nodes[i] == a->nodes[k]) {
             k++;
         }
     }
+    // If the index of set A is the same as size of set A and size of set A and
+    // B are different => is subset
     return (k == a->size) && (a->size != b->size);
 }
 
