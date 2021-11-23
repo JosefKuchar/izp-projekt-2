@@ -466,7 +466,8 @@ void print_relation(struct relation* r, struct universe* u) {
 /**
  * @brief Check if set is empty
  * @param a Set
- * @return True if set is empty
+ * @retval true - Set is empty
+ * @retval false - Set is not empty
  */
 bool set_empty(struct set* a) {
     return a->size == 0;
@@ -495,7 +496,7 @@ struct set* set_complement(struct set* a, struct universe* u) {
     complement->size = 0;
 
     int size = (u->size - a->size) * sizeof(int);
-    // If set is same as universum => complement is empty
+    // If set is same as universe => complement is empty
     if (size == 0) {
         complement->nodes = NULL;
         return complement;
@@ -508,15 +509,15 @@ struct set* set_complement(struct set* a, struct universe* u) {
         return NULL;
     }
 
-    // Loop around all universum nodes
+    // Loop around all universe nodes
     for (int i = 0, k = 0; i < u->size; i++) {
-        // If universum node is in given set => skip adding that node into
+        // If universe node is in given set => skip adding that node into
         // complement
         if (k < a->size && i == a->nodes[k]) {
             k++;
             continue;
         }
-        // Adds universum node into complement
+        // Adds universe node into complement
         complement->nodes[complement->size++] = i;
     }
     return complement;
@@ -529,60 +530,50 @@ struct set* set_complement(struct set* a, struct universe* u) {
  * @return Pointer to new set
  */
 struct set* set_union(struct set* a, struct set* b) {
-    // Allocate memory union set
+    // Memory allocation for set
     struct set* s_union = malloc(sizeof(struct set));
     if (s_union == NULL) {
         return NULL;
     }
     s_union->size = 0;
+
     int size = (a->size + b->size) * sizeof(int);
+    // If sets are empty => union is empty
     if (size == 0) {
         s_union->nodes = NULL;
         return s_union;
     }
+
+    // Memory allocation for set nodes
     s_union->nodes = malloc(size);
     if (s_union->nodes == NULL) {
         free(s_union);
         return NULL;
     }
 
-    // If one of parameter sets is empty, copy other set
-    if (a->size == 0) {
-        for (int i = 0; i < b->size; i++) {
-            s_union->nodes[i] = b->nodes[i];
-            s_union->size++;
-        }
-        return s_union;
-    } else if (b->size == 0) {
-        for (int i = 0; i < a->size; i++) {
-            s_union->nodes[i] = a->nodes[i];
-            s_union->size++;
-        }
-        return s_union;
-    }
-
-    for (int i = 0; i < a->size; i++) {
-        s_union->nodes[i] = a->nodes[i];
-        s_union->size++;
-    }
-
-    // If element of set B isn't in set A, add to union
-    for (int i = 0; i < b->size; i++) {
-        bool element_in_set = false;
-        for (int j = 0; j < a->size; j++) {
-            if (a->nodes[j] == b->nodes[i]) {
-                element_in_set = true;
-                break;
+    // Starting indexes of sets a and b
+    int i = 0, k = 0;
+    // Loop around all nodes from set a
+    while (i < a->size) {
+        // Check if k index is smaller than size of set b and if node from set b
+        // is smaller or equal to node from set a => add node from set b
+        if (k < b->size && b->nodes[k] <= a->nodes[i]) {
+            // If nodes are equal => increment index of set a
+            if (b->nodes[k] == a->nodes[i]) {
+                i++;
             }
+            // Adds node from set b
+            s_union->nodes[s_union->size++] = b->nodes[k++];
+            continue;
         }
-
-        if (!element_in_set) {
-            s_union->nodes[s_union->size] = b->nodes[i];
-            s_union->size++;
-        }
+        // Adds node from set a
+        s_union->nodes[s_union->size++] = a->nodes[i++];
+    }
+    // Adds remaining nodes from set b
+    while (k < b->size) {
+        s_union->nodes[s_union->size++] = b->nodes[k++];
     }
 
-    set_sort(s_union);
     return s_union;
 }
 
@@ -1568,7 +1559,7 @@ bool parse_universe(FILE* fp, struct universe* u) {
             continue;
             // Handle invalid characters
         } else if (!isalpha(c)) {
-            return error("Invalid character in universum\n");
+            return error("Invalid character in universe\n");
         }
 
         if (index >= MAX_STRING_LENGTH) {
