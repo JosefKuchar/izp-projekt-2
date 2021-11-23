@@ -44,7 +44,8 @@ enum function_input {
 };
 
 enum function_output { OUT_VOID, OUT_BOOL, OUT_SET, OUT_RELATION };
-
+#pragma endregion
+#pragma region STRUCTS
 /*--------------------------------- STRUCTS ---------------------------------*/
 
 // Struct to keep track of universe
@@ -421,11 +422,7 @@ bool store_valid(struct store* store) {
  * @param b bool to be printed
  */
 void print_bool(bool b) {
-    if (b) {
-        printf("true\n");
-    } else {
-        printf("false\n");
-    }
+    printf(b ? "true\n" : "false\n");
 }
 
 /**
@@ -1336,7 +1333,8 @@ void free_store(struct store* store) {
     // Free store itself
     free(store->nodes);
 }
-
+#pragma endregion
+#pragma region COMMAND_DEFS
 // TODO maybe move this into some function
 const struct command_def COMMAND_DEFS[] = {
     // Function name, function pointer, input, output
