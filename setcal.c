@@ -551,25 +551,25 @@ struct set* set_union(struct set* a, struct set* b) {
         return NULL;
     }
 
-    // Starting indexes of sets a and b
+    // Starting indexes of sets A and B
     int i = 0, k = 0;
-    // Loop around all nodes from set a
+    // Loop around all nodes from set A
     while (i < a->size) {
-        // Check if k index is smaller than size of set b and if node from set b
-        // is smaller or equal to node from set a => add node from set b
+        // Check if k index is smaller than size of set B and if node from set B
+        // is smaller or equal to node from set A => add node from set B
         if (k < b->size && b->nodes[k] <= a->nodes[i]) {
-            // If nodes are equal => increment index of set a
+            // If nodes are equal => increment index of set A
             if (b->nodes[k] == a->nodes[i]) {
                 i++;
             }
-            // Adds node from set b
+            // Adds node from set B
             s_union->nodes[s_union->size++] = b->nodes[k++];
             continue;
         }
-        // Adds node from set a
+        // Adds node from set A
         s_union->nodes[s_union->size++] = a->nodes[i++];
     }
-    // Adds remaining nodes from set b
+    // Adds remaining nodes from set B
     while (k < b->size) {
         s_union->nodes[s_union->size++] = b->nodes[k++];
     }
@@ -584,29 +584,39 @@ struct set* set_union(struct set* a, struct set* b) {
  * @return Pointer to new set
  */
 struct set* set_intersect(struct set* a, struct set* b) {
-    // Allocate memory intersect set
+    // Memory allocation for set
     struct set* intersect = malloc(sizeof(struct set));
     if (intersect == NULL) {
         return NULL;
     }
     intersect->size = 0;
+
     int size = get_min(a->size, b->size) * sizeof(int);
+    // If one of the sets is empty => intersect is empty
     if (size == 0) {
         intersect->nodes = NULL;
         return intersect;
     }
+
+    // Memory allocation for set nodes
     intersect->nodes = malloc(size);
     if (intersect->nodes == NULL) {
         free(intersect);
         return NULL;
     }
 
+    // Starting indexes of sets A and B
     int i = 0, k = 0;
+    // Loop until one of the indexers is same as size of it's set
     while (i < a->size && k < b->size) {
+        // If nodes are the same => add node to interset and increment indexers
         if (a->nodes[i] == b->nodes[k]) {
             intersect->nodes[intersect->size++] = a->nodes[i++];
             k++;
-        } else if (a->nodes[i] < b->nodes[k]) {
+        }
+        // If node from set A is smaller than node from set B => increment index
+        // of set A, else increment index of set b
+        else if (a->nodes[i] < b->nodes[k]) {
             i++;
         } else {
             k++;
