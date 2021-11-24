@@ -931,18 +931,18 @@ struct set* relation_domain(struct relation* r) {
     }
 
     // Memory allocation for set nodes
-    domain->nodes = malloc(sizeof(int));
+    domain->nodes = malloc(sizeof(int) * r->size);
+    domain->size = 0;
+
+    // Checks if relation is empty => returns empty set
+    if (r->size == 0) {
+        return domain;
+    }
+
+    // Check malloc
     if (domain->nodes == NULL) {
         free(domain);
         return NULL;
-    }
-
-    domain->size = 0;
-
-    // Checks if relation is empty => returns emtpy relation
-    if (r->size <= 0) {
-        domain->nodes = NULL;
-        return domain;
     }
 
     // Puts the first element of the first relation node to set
@@ -951,13 +951,6 @@ struct set* relation_domain(struct relation* r) {
         // If the last element is not the same as current element => adds
         // element in set
         if (r->nodes[i].a != r->nodes[i - 1].a) {
-            // Memory reallocation for set nodes
-            domain->nodes =
-                srealloc(domain->nodes, sizeof(int) * (domain->size + 1));
-            if (domain->nodes == NULL) {
-                return NULL;
-            }
-
             domain->nodes[domain->size++] = r->nodes[i].a;
         }
     }
@@ -979,12 +972,18 @@ struct set* relation_codomain(struct relation* r) {
     }
 
     // Memory allocation for set nodes
-    codomain->nodes = malloc(sizeof(int));
+    codomain->nodes = malloc(sizeof(int) * r->size);
+    codomain->size = 0;
+
+    // Checks if relation is empty => returns empty set
+    if (r->size == 0) {
+        return codomain;
+    }
+
+    // Check malloc
     if (codomain->nodes == NULL) {
         return NULL;
     }
-
-    codomain->size = 0;
 
     // Loop around all nodes
     for (int i = 0; i < r->size; i++) {
@@ -998,13 +997,6 @@ struct set* relation_codomain(struct relation* r) {
         }
         // If element wasn't found in codomain => adds element
         if (!found) {
-            // Memory reallocation for set nodes
-            codomain->nodes =
-                srealloc(codomain->nodes, sizeof(int) * (codomain->size + 1));
-            if (codomain->nodes == NULL) {
-                return NULL;
-            }
-
             codomain->nodes[codomain->size++] = r->nodes[i].b;
         }
     }
@@ -2105,7 +2097,7 @@ FILE* open_file(char* filename) {
     fp = fopen(filename, "r");
 
     if (fp == NULL) {
-        error("Nepodarilo se otevrit soubor!\n");
+        error("Failed to open file!\n");
         return NULL;
     }
 
@@ -2120,7 +2112,7 @@ FILE* open_file(char* filename) {
  */
 bool close_file(FILE* fp) {
     if (fclose(fp) == EOF) {
-        return error("Nepodarilo se uzavrit soubor!\n");
+        return error("Failed to close file!\n");
     } else {
         return true;
     }
@@ -2136,7 +2128,7 @@ bool close_file(FILE* fp) {
  */
 bool check_arguments(int argc) {
     if (argc != 2) {
-        return error("Nespravny pocet argumentu!\n");
+        return error("Invalid number of arguments!\n");
     } else {
         return true;
     }
