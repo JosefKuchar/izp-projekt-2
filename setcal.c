@@ -1678,7 +1678,7 @@ bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
     r->size = 0;
     char node[STRING_BUFFER_SIZE] = {0};
     int index = 0;
-    bool read = false;
+    bool read = false, first_loaded = false;
 
     while (true) {
         int c = getc(fp);
@@ -1713,15 +1713,21 @@ bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
                     // Checks if we are loading first or second node in relation
                     if (c != ')') {
                         r->nodes[r->size].a = i;
+                        first_loaded = true;
                     } else {
+                        // Checks if first node was loaded
+                        if (!first_loaded) {
+                            return error("Relation is missing a second node.\n");
+                        }
                         r->nodes[r->size++].b = i;
                         read = false;
+                        first_loaded = false;
                     }
                     break;
                 }
                 // If the iteration is the last one => relation node wasn't found in universe
                 if (i == u->size - 1) {
-                    return error("S Relation node is not in universe.\n");
+                    return error("Relation node is not in universe.\n");
                 }
             }
 
