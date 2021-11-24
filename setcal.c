@@ -1909,7 +1909,7 @@ bool process_universe(FILE* fp, struct store* store, bool empty) {
 
     // Check malloc error
     if (store->nodes[index].obj == NULL) {
-        return error("Malloc error!\n");
+        return alloc_error();
     }
 
     store->size++;
@@ -1929,8 +1929,13 @@ bool process_set(FILE* fp, struct store* store, bool empty) {
 
     // Init set object
     store->nodes[index].type = SET;
-    // TODO check malloc
     store->nodes[index].obj = calloc(1, sizeof(struct set));
+
+    // Check malloc
+    if (store->nodes[index].obj == NULL) {
+        return alloc_error();
+    }
+
     store->size++;
 
     // If set is empty, we can return it, it is completely valid
@@ -1962,8 +1967,13 @@ bool process_relation(FILE* fp, struct store* store, bool empty) {
 
     // Init relation object
     store->nodes[index].type = RELATION;
-    // TODO check malloc
     store->nodes[index].obj = calloc(1, sizeof(struct relation));
+
+    // Check malloc
+    if (store->nodes[index].obj == NULL) {
+        return alloc_error();
+    }
+
     store->size++;
 
     // If relation is empty, we can return it, it is completely valid
@@ -1993,15 +2003,20 @@ bool process_relation(FILE* fp, struct store* store, bool empty) {
 bool process_command(FILE* fp, struct store* store, bool empty) {
     // Command can't be empty
     if (empty) {
-        return error("Command can't be empty!");
+        return error("Command can't be empty!\n");
     }
 
     int index = store->size;
 
     // Init command object
     store->nodes[index].type = COMMAND;
-    // TODO check malloc
     store->nodes[index].obj = malloc(sizeof(struct command));
+
+    // Check malloc
+    if (store->nodes[index].obj == NULL) {
+        return alloc_error();
+    }
+
     store->size++;
 
     // Parse command
