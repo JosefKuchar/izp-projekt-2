@@ -256,6 +256,35 @@ bool error(const char* message) {
     return false;
 }
 
+/**
+ * @brief Alloc error printing funnction
+ * @return Always false for simple usage
+ */
+bool alloc_error() {
+    return error("Allocation error!\n");
+}
+
+/**
+ * @brief Realloc with allocation counter
+ * @param block Memory block that will be reallocated
+ * @param current Current count of items
+ * @param allocated Count of allocated number of items
+ * @param item_size Size of one item
+ * @return True if allocation was successful
+ */
+bool smart_realloc(void* block, int current, int* allocated, int item_size) {
+    if (current > *allocated) {
+        *allocated *= 2;
+        // Allocate new memory
+        block = srealloc(block, item_size * (*allocated));
+        // Handle realloc error
+        if (block == NULL) {
+            return false;
+        }
+    }
+    return true;
+}
+
 #pragma endregion
 #pragma region VALIDATIONS
 /*------------------------------- VALIDATIONS -------------------------------*/
@@ -1612,6 +1641,23 @@ bool parse_universe(FILE* fp, struct universe* u) {
 }
 
 /**
+ * @brief Find element from universe and set it in set
+ * @param u Universe
+ * @param s Set
+ * @return true When element from universe was found
+ * @return false When element wasn't found
+ */
+bool set_set_node(struct universe* u, struct set* s, char* buffer) {
+    for (int i = 0; i < u->size; i++) {
+        if (!(strcmp(buffer, u->nodes[i]))) {
+            s->nodes[s->size - 1] = i;
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * @brief Parse set from file stream
  * @param fp File pointer
  * @param u Universe
@@ -1620,48 +1666,46 @@ bool parse_universe(FILE* fp, struct universe* u) {
  */
 bool parse_set(FILE* fp, struct set* s, struct universe* u) {
     // Allocate memory for one node
-    s->nodes = malloc(sizeof(int));
+    s->nodes = malloc(sizeof(int) * INITIAL_SET_ALLOC);
+    // Check malloc
+    if (s->nodes == NULL) {
+        return alloc_error();
+    }
+
     s->size = 0;
-    char node[STRING_BUFFER_SIZE] = {0};
-    int index = 0;
+    char buffer[STRING_BUFFER_SIZE] = {0};
+    int index = 0;  // Index in buffer
+    int allocated = INITIAL_SET_ALLOC;
 
     while (true) {
         int c = getc(fp);
+        const bool end = c == EOF || c == '\n';
 
-        if (c == ' ' || c == EOF || c == '\n') {
+        if (c == ' ' || end) {
             s->size++;
-            node[index] = '\0';
+            buffer[index] = '\0';
             index = 0;
-            // Allocate memory for next node
-            s->nodes = srealloc(s->nodes, sizeof(int) * s->size + 1);
-
-            // Compares set node to universe node
-            int max = u->size;
-            for (int i = 0; i < max; i++) {
-                if (!(strcmp(node, u->nodes[i]))) {
-                    s->nodes[s->size - 1] = i;
-                    break;
-                }
-                // If the iteration is the last one => set node wasn't found in
-                // universe
-                if (i == max - 1) {
-                    return error("S Set node is not in universe.\n");
-                }
+            // Realloc
+            if (!smart_realloc(s->nodes, s->size, &allocated, sizeof(int))) {
+                return alloc_error();
+            }
+            // Find element in universe and set it
+            if (!set_set_node(u, s, buffer)) {
+                return error("Set node is not in universe.\n");
             }
             // If character is EOF or newline we can end parsing
-            if (c == EOF || c == '\n') {
-                break;
-            } else {
-                continue;
+            if (end) {
+                return true;
             }
+        } else {
+            // Check buffer overflow
+            if (index >= MAX_STRING_LENGTH) {
+                return error("Element name too long!\n");
+            }
+            // Write to buffer
+            buffer[index] = c;
+            index++;
         }
-
-        if (index >= MAX_STRING_LENGTH) {
-            return error("Element name too long!\n");
-        }
-
-        node[index] = c;
-        index++;
     }
     return true;
 }
@@ -2009,20 +2053,15 @@ bool process_line(FILE* fp, char c, struct store* store) {
  * @retval false - Function failed
  */
 bool process_file(FILE* fp, struct store* store) {
-    int allocated = INITIAL_STORE_ALLOC;
+    int a = INITIAL_STORE_ALLOC;
 
     // Loop around all lines
-    for (int c = 0, i = 0; (c = getc(fp)) != EOF; i++) {
+    for (int c = 0, i = 1; (c = getc(fp)) != EOF; i++) {
         // Realloc store
-        if (i >= allocated) {
-            allocated *= 2;
-            const int new_alloc = allocated * sizeof(struct store_node);
-            store->nodes = srealloc(store->nodes, new_alloc);
-            if (store->nodes == NULL) {
-                return error("Error reallocating store!\n");
-            }
+        if (!smart_realloc(store->nodes, i, &a, sizeof(struct store_node))) {
+            return alloc_error();
         }
-
+        // Parse one line
         if (!process_line(fp, c, store)) {
             return error("Error parsing file!\n");
         }
