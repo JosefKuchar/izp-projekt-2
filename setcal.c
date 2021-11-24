@@ -1879,28 +1879,26 @@ bool parse_command(FILE* fp, struct command* command) {
 bool process_universe(FILE* fp, struct store* store, bool empty) {
     int index = store->size;
 
-    // TODO check malloc
-    // TODO make this function better
     store->universe = malloc(sizeof(struct universe));
+    // Check malloc
+    if (store->universe == NULL) {
+        return alloc_error();
+    }
 
-    // If universe is empty, we can return, it is completely valid
+    // Empty universe is valid
     if (empty) {
         store->universe->nodes = NULL;
         store->universe->size = 0;
-        store->nodes[index].type = SET;
-        store->nodes[index].obj = get_set_from_universe(store->universe);
-        store->size++;
-        return true;
-    }
+    } else {
+        // Parse universe
+        if (!parse_universe(fp, store->universe)) {
+            return error("Error parsing universe!\n");
+        }
 
-    // Parse universe
-    if (!parse_universe(fp, store->universe)) {
-        return error("Error parsing universe!\n");
-    }
-
-    // Check if universe is valid
-    if (!universe_valid(store->universe)) {
-        return error("Invalid universe!\n");
+        // Check if universe is valid
+        if (!universe_valid(store->universe)) {
+            return error("Invalid universe!\n");
+        }
     }
 
     // Generate set from universe
