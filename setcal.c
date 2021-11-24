@@ -46,7 +46,8 @@ enum function_input {
 };
 
 enum function_output { OUT_VOID, OUT_BOOL, OUT_SET, OUT_RELATION };
-
+#pragma endregion
+#pragma region STRUCTS
 /*--------------------------------- STRUCTS ---------------------------------*/
 
 // Struct to keep track of universe
@@ -105,7 +106,7 @@ struct store {
 /*--------------------------------- SORTING ---------------------------------*/
 
 /**
- * Function to compare two numbers - for qsort
+ * @brief Function to compare two numbers - for qsort
  * @param a Pointer to first number
  * @param b Pointer to second number
  * @return Differece between two numbers
@@ -115,7 +116,7 @@ int compare_num_nodes(const void* a, const void* b) {
 }
 
 /**
- * Function to compare two relation nodes
+ * @brief Function to compare two relation nodes
  * @param a Pointer to first relation node
  * @param b Pointer to second relation node
  * @return Difference between two relation nodes
@@ -135,16 +136,18 @@ int compare_rel_nodes(const void* a, const void* b) {
 }
 
 /**
- * Sort set
+ * @brief Sort set
  * @param s Set
+ * @return Sorted set (ascending)
  */
 void set_sort(struct set* s) {
     qsort(s->nodes, s->size, sizeof(int), compare_num_nodes);
 }
 
 /**
- * Sort relation
+ * @brief Sort relation
  * @param r Relation
+ * @return Sorted relation (ascending)
  */
 void relation_sort(struct relation* r) {
     qsort(r->nodes, r->size, sizeof(struct relation_node), compare_rel_nodes);
@@ -154,7 +157,7 @@ void relation_sort(struct relation* r) {
 /*----------------------------- HELPER FUNCTIONS ----------------------------*/
 
 /**
- * Realloc that automatically frees old block when fails
+ * @brief Realloc that automatically frees old block when fails
  * @param block Existing memory block
  * @param size New size
  * @return Pointer to newly allocated memory, NULL when fails
@@ -171,7 +174,7 @@ void* srealloc(void* block, size_t size) {
 }
 
 /**
- * Find minimum of two numbers (integers)
+ * @brief Find minimum of two numbers (integers)
  * @param a First number
  * @param b Second number
  * @return Minimum of two numbers
@@ -181,7 +184,7 @@ int get_min(int a, int b) {
 }
 
 /**
- * Find maximum of two numbers (integers)
+ * @brief Find maximum of two numbers (integers)
  * @param a First number
  * @param b Second number
  * @return Maximum of two numbers
@@ -191,7 +194,7 @@ int get_max(int a, int b) {
 }
 
 /**
- * Generate universe from set
+ * @brief Generate universe from set
  * @param universe Universe
  * @return Set if everything went correctly, null if malloc failed
  */
@@ -223,7 +226,7 @@ struct set* get_set_from_universe(struct universe* universe) {
 }
 
 /**
- * Get number of arguments from input type
+ * @brief Get number of arguments from input type
  * @param input_type Input type
  * @return Number of arguments
  */
@@ -244,7 +247,7 @@ int get_argument_count(enum function_input input_type) {
 }
 
 /**
- * Error printing function
+ * @brief Error printing function
  * @param message Error message
  * @return Always false for simple usage
  */
@@ -258,9 +261,11 @@ bool error(const char* message) {
 /*------------------------------- VALIDATIONS -------------------------------*/
 
 /**
- * Check if universe is valid (doesn't contain reserved words, same words)
+ * @brief Check if universe is valid (doesn't contain reserved words, same
+ * words)
  * @param u Universe
- * @return True if universe is valid
+ * @retval true - Universe valid
+ * @retval false - Universe invalid
  */
 bool universe_valid(struct universe* u) {
     // Define all illegal words inside universe
@@ -299,9 +304,10 @@ bool universe_valid(struct universe* u) {
 }
 
 /**
- * Check if set is valid
+ * @brief Check if set is valid
  * @param s Set - sorted
- * @return True if set is valid
+ * @retval true - Set valid
+ * @retval false - Set invalid
  */
 bool set_valid(struct set* a) {
     // Loop around all elements inside set
@@ -316,9 +322,10 @@ bool set_valid(struct set* a) {
 }
 
 /**
- * Check if relation is valid
+ * @brief Check if relation is valid
  * @param r Relation - sorted
- * @return True if relation is valid
+ * @retval true - Relation valid
+ * @retval false - Relation invalid
  */
 bool relation_valid(struct relation* r) {
     // Loop around all elements inside relation
@@ -333,6 +340,14 @@ bool relation_valid(struct relation* r) {
     return true;
 }
 
+/**
+ * @brief Check if arguments of command are valid
+ * @param command command
+ * @param store store
+ * @param def command definition
+ * @retval true - Command arguments valid
+ * @retval false - Command arguments invalid
+ */
 bool command_arguments_valid(struct command* command,
                              struct store* store,
                              struct command_def def) {
@@ -374,9 +389,10 @@ bool command_arguments_valid(struct command* command,
 }
 
 /**
- * Check if store is valid (correct order of node types)
+ * @brief Check if store is valid (correct order of node types)
  * @param store Store
- * @return True if store is valid
+ * @retval true - Store valid
+ * @retval false - Store invalid
  */
 bool store_valid(struct store* store) {
     // Ensure good order of node types
@@ -405,19 +421,15 @@ bool store_valid(struct store* store) {
 /*----------------------------- PRINT FUNCTIONS -----------------------------*/
 
 /**
- * Print bool value
+ * @brief Print bool value
  * @param b bool to be printed
  */
 void print_bool(bool b) {
-    if (b) {
-        printf("true\n");
-    } else {
-        printf("false\n");
-    }
+    printf(b ? "true\n" : "false\n");
 }
 
 /**
- * Print set
+ * @brief Print set
  * @param a Set
  * @param u Universe
  */
@@ -433,7 +445,7 @@ void print_set(struct set* a, struct universe* u, bool is_universe) {
 }
 
 /**
- * Print relation
+ * @brief Print relation
  * @param r Relation
  * @param u Universe
  */
@@ -452,16 +464,17 @@ void print_relation(struct relation* r, struct universe* u) {
 /*------------------------------ SET FUNCTIONS ------------------------------*/
 
 /**
- * Set empty function
+ * @brief Check if set is empty
  * @param a Set
- * @return True if set is empty
+ * @retval true - Set is empty
+ * @retval false - Set is not empty
  */
 bool set_empty(struct set* a) {
     return a->size == 0;
 }
 
 /**
- * Prints size of set
+ * @brief Prints size of set
  * @param a Set
  */
 void set_card(struct set* a) {
@@ -469,7 +482,7 @@ void set_card(struct set* a) {
 }
 
 /**
- * Set complement function
+ * @brief Create set complement
  * @param a Set - sorted
  * @param u Universe
  * @return Pointer to new set
@@ -483,7 +496,7 @@ struct set* set_complement(struct set* a, struct universe* u) {
     complement->size = 0;
 
     int size = (u->size - a->size) * sizeof(int);
-    // If set is same as universum => complement is empty
+    // If set is same as universe => complement is empty
     if (size == 0) {
         complement->nodes = NULL;
         return complement;
@@ -496,114 +509,114 @@ struct set* set_complement(struct set* a, struct universe* u) {
         return NULL;
     }
 
-    // Loop around all universum nodes
+    // Loop around all universe nodes
     for (int i = 0, k = 0; i < u->size; i++) {
-        // If universum node is in given set => skip adding that node into
+        // If universe node is in given set => skip adding that node into
         // complement
         if (k < a->size && i == a->nodes[k]) {
             k++;
             continue;
         }
-        // Adds universum node into complement
+        // Adds universe node into complement
         complement->nodes[complement->size++] = i;
     }
     return complement;
 }
 
 /**
- * Set union function
+ * @brief Find union of two sets
  * @param a First set - sorted
  * @param b Second set - sorted
  * @return Pointer to new set
  */
 struct set* set_union(struct set* a, struct set* b) {
-    // Allocate memory union set
+    // Memory allocation for set
     struct set* s_union = malloc(sizeof(struct set));
     if (s_union == NULL) {
         return NULL;
     }
     s_union->size = 0;
+
     int size = (a->size + b->size) * sizeof(int);
+    // If sets are empty => union is empty
     if (size == 0) {
         s_union->nodes = NULL;
         return s_union;
     }
+
+    // Memory allocation for set nodes
     s_union->nodes = malloc(size);
     if (s_union->nodes == NULL) {
         free(s_union);
         return NULL;
     }
 
-    // If one of parameter sets is empty, copy other set
-    if (a->size == 0) {
-        for (int i = 0; i < b->size; i++) {
-            s_union->nodes[i] = b->nodes[i];
-            s_union->size++;
-        }
-        return s_union;
-    } else if (b->size == 0) {
-        for (int i = 0; i < a->size; i++) {
-            s_union->nodes[i] = a->nodes[i];
-            s_union->size++;
-        }
-        return s_union;
-    }
-
-    for (int i = 0; i < a->size; i++) {
-        s_union->nodes[i] = a->nodes[i];
-        s_union->size++;
-    }
-
-    // If element of set B isn't in set A, add to union
-    for (int i = 0; i < b->size; i++) {
-        bool element_in_set = false;
-        for (int j = 0; j < a->size; j++) {
-            if (a->nodes[j] == b->nodes[i]) {
-                element_in_set = true;
-                break;
+    // Starting indexes of sets A and B
+    int i = 0, k = 0;
+    // Loop around all nodes from set A
+    while (i < a->size) {
+        // Check if k index is smaller than size of set B and if node from set B
+        // is smaller or equal to node from set A => add node from set B
+        if (k < b->size && b->nodes[k] <= a->nodes[i]) {
+            // If nodes are equal => increment index of set A
+            if (b->nodes[k] == a->nodes[i]) {
+                i++;
             }
+            // Adds node from set B
+            s_union->nodes[s_union->size++] = b->nodes[k++];
+            continue;
         }
-
-        if (!element_in_set) {
-            s_union->nodes[s_union->size] = b->nodes[i];
-            s_union->size++;
-        }
+        // Adds node from set A
+        s_union->nodes[s_union->size++] = a->nodes[i++];
+    }
+    // Adds remaining nodes from set B
+    while (k < b->size) {
+        s_union->nodes[s_union->size++] = b->nodes[k++];
     }
 
-    set_sort(s_union);
     return s_union;
 }
 
 /**
- * Set intersect function
+ * @brief Find intersect of two sets
  * @param a Set - sorted
  * @param b Set - sorted
  * @return Pointer to new set
  */
 struct set* set_intersect(struct set* a, struct set* b) {
-    // Allocate memory intersect set
+    // Memory allocation for set
     struct set* intersect = malloc(sizeof(struct set));
     if (intersect == NULL) {
         return NULL;
     }
     intersect->size = 0;
+
     int size = get_min(a->size, b->size) * sizeof(int);
+    // If one of the sets is empty => intersect is empty
     if (size == 0) {
         intersect->nodes = NULL;
         return intersect;
     }
+
+    // Memory allocation for set nodes
     intersect->nodes = malloc(size);
     if (intersect->nodes == NULL) {
         free(intersect);
         return NULL;
     }
 
+    // Starting indexes of sets A and B
     int i = 0, k = 0;
+    // Loop until one of the indexers is same as size of it's set
     while (i < a->size && k < b->size) {
+        // If nodes are the same => add node to interset and increment indexers
         if (a->nodes[i] == b->nodes[k]) {
             intersect->nodes[intersect->size++] = a->nodes[i++];
             k++;
-        } else if (a->nodes[i] < b->nodes[k]) {
+        }
+        // If node from set A is smaller than node from set B => increment index
+        // of set A, else increment index of set b
+        else if (a->nodes[i] < b->nodes[k]) {
             i++;
         } else {
             k++;
@@ -613,95 +626,105 @@ struct set* set_intersect(struct set* a, struct set* b) {
 }
 
 /**
- * Set minus function
+ * @brief Finds difference between two sets
  * @param a Set - sorted
  * @param b Set - sorted
  * @return Pointer to new set
  */
 struct set* set_minus(struct set* a, struct set* b) {
-    // Allocate memory minus set
+    // Memory allocation for set
     struct set* minus = malloc(sizeof(struct set));
     if (minus == NULL) {
         return NULL;
     }
     minus->size = 0;
+
     int size = a->size * sizeof(int);
+    // If set A is empty => minus is empty
     if (size == 0) {
         minus->nodes = NULL;
         return minus;
     }
+
+    // Memory allocation for set nodes
     minus->nodes = malloc(size);
     if (minus->nodes == NULL) {
         free(minus);
         return NULL;
     }
 
-    if (b->size == 0) {
-        for (int i = 0; i < a->size; i++) {
-            minus->nodes[i] = a->nodes[i];
-            minus->size++;
-        }
-
-        return minus;
-    }
-
+    // Starting indexes of sets A and B
     int i = 0, k = 0;
+    // Loop around all nodes from set A
     while (i < a->size) {
-        if (k > b->size || a->nodes[i] < b->nodes[k]) {
-            minus->nodes[minus->size++] = a->nodes[i++];
-        } else if (a->nodes[i] == b->nodes[k]) {
-            i++;
+        // Check if k index is smaller than size of set B and if node from set B
+        // is smaller or equal to node from set A => skip adding node
+        if (k < b->size && b->nodes[k] <= a->nodes[i]) {
+            // If nodes are equal => increment index of set A
+            if (b->nodes[k] == a->nodes[i]) {
+                i++;
+            }
+            // increment index of set A
             k++;
-        } else {
-            k++;
+            continue;
         }
+        // Adds node from set A
+        minus->nodes[minus->size++] = a->nodes[i++];
     }
     return minus;
 }
 
 /**
- * Set subseteq function
+ * @brief Set subseteq function
  * @param a Set - sorted
  * @param b Set - sorted
- * @return True if a is subset of b or equal to b
+ * @retval true - Set a is subset of b or equal to b
+ * @retval false - Set a isn't subset of b or equal to b
  */
 bool set_subseteq(struct set* a, struct set* b) {
+    // Index of set A
     int k = 0;
-    for (int i = 0; i < b->size; i++) {
-        if (k == a->size) {
-            break;
-        }
+    // Loop around all nodes from set B or until all nodes from set A were
+    // found in set B
+    for (int i = 0; i < b->size && k < a->size; i++) {
+        //  Check if node from set A is in set B => increment index of set A
         if (b->nodes[i] == a->nodes[k]) {
             k++;
         }
     }
+    // If the index of set A is the same as size of set A => is subseteq
     return (k == a->size);
 }
 
 /**
- * Set subset function
+ * @brief Set subset function
  * @param a Set - sorted
  * @param b Set - sorted
- * @return True if a is subset of b
+ * @retval true - Set a is subset of b
+ * @retval false - Set a isn't subset of b
  */
 bool set_subset(struct set* a, struct set* b) {
+    // Index of set A
     int k = 0;
-    for (int i = 0; i < b->size; i++) {
-        if (k == a->size) {
-            break;
-        }
+    // Loop around all nodes from set B or until all nodes from set A were
+    // found in set B
+    for (int i = 0; i < b->size && k < a->size; i++) {
+        //  Check if node from set A is in set B => increment index of set A
         if (b->nodes[i] == a->nodes[k]) {
             k++;
         }
     }
+    // If the index of set A is the same as size of set A and size of set A and
+    // B are different => is subset
     return (k == a->size) && (a->size != b->size);
 }
 
 /**
- * Compare two sets
+ * @brief Compare two sets
  * @param a First set - sorted
  * @param b Second set - sorted
- * @return True if sets are equal
+ * @retval true - sets are equal
+ * @retval false - sets aren't equal
  */
 bool set_equals(struct set* a, struct set* b) {
     // If sets have different sizes they are different
@@ -724,10 +747,11 @@ bool set_equals(struct set* a, struct set* b) {
 /*--------------------------- RELATION FUNCTIONS ----------------------------*/
 
 /**
- * Find out if relation is reflexive
+ * @brief Find out if relation is reflexive
  * @param r Relation - sorted
  * @param u Universe - sorted
- * @return True if relation is reflexive
+ * @retval true - Relation is reflexive
+ * @retval false - Relation isn't reflexive
  */
 bool relation_reflexive(struct relation* r, struct universe* u) {
     bool reflex_for_i;
@@ -754,7 +778,6 @@ bool relation_reflexive(struct relation* r, struct universe* u) {
             }
         }
 
-        // Relation isn't reflexive
         if (!reflex_for_i) {
             return false;
         }
@@ -767,8 +790,8 @@ bool relation_reflexive(struct relation* r, struct universe* u) {
  * @brief Find out if relation is symmetric
  *
  * @param r Relation - sorted
- * @retval true - relation is symmetric
- * @retval false - relation is not symmetric
+ * @retval true - Relation is symmetric
+ * @retval false - Relation is not symmetric
  */
 bool relation_symmetric(struct relation* r) {
     // Loop around all relation nodes
@@ -794,8 +817,8 @@ bool relation_symmetric(struct relation* r) {
  * @brief Find out if relation is symmetric
  *
  * @param r Relation - sorted
- * @retval true - relation is antisymmetric
- * @retval false - relation is not antisymmetric
+ * @retval true - Relation is antisymmetric
+ * @retval false - Relation is not antisymmetric
  */
 bool relation_antisymmetric(struct relation* r) {
     // Loop around all relation nodes
@@ -816,8 +839,8 @@ bool relation_antisymmetric(struct relation* r) {
  * @brief Find out if relation is transitive
  *
  * @param r Relation - sorted
- * @retval true - relation is transitive
- * @retval false - relation is not transitive
+ * @retval true - Relation is transitive
+ * @retval false - Relation is not transitive
  */
 bool relation_transitive(struct relation* r) {
     // Transitive relation: (aRb & bRa) => aRc
@@ -851,8 +874,8 @@ bool relation_transitive(struct relation* r) {
  * @brief Find out if relation is a function
  *
  * @param r Relation - sorted
- * @retval true - relation is a function
- * @retval false - relation is not a function
+ * @retval true - Relation is a function
+ * @retval false - Relation is not a function
  */
 bool relation_function(struct relation* r) {
     // Loops around all elemnts - 1
@@ -916,7 +939,8 @@ struct set* relation_domain(struct relation* r) {
  * @brief Relation codomain function
  *
  * @param r Relation - sorted
- * @return Pointer to a new set
+ * @retval Set pointer - relation codomain set
+ * @retval NULL - Function failed
  */
 struct set* relation_codomain(struct relation* r) {
     // Memory allocation for set
@@ -963,8 +987,8 @@ struct set* relation_codomain(struct relation* r) {
  * @brief Find out if relation is injective
  *
  * @param r Relation sorted
- * @retval true - relation is injective
- * @retval false - relation is not injective
+ * @retval true - Relation is injective
+ * @retval false - Relation is not injective
  */
 bool relation_injective(struct relation* r) {
     // Loop around all nodes
@@ -986,8 +1010,8 @@ bool relation_injective(struct relation* r) {
  * @brief Find out if relation is surjective
  *
  * @param r Relation - sorted
- * @return true - relation is surjective
- * @return false - relation is not surjective
+ * @return true - Relation is surjective
+ * @return false - Relation is not surjective
  */
 bool relation_surjective(struct relation* r) {
     // Loop around all nodes
@@ -1004,8 +1028,8 @@ bool relation_surjective(struct relation* r) {
  * @brief Find out if relation is bijective
  *
  * @param r Relation - sorted
- * @retval true - relation is bijective
- * @return false - relation is not bijective
+ * @retval true - Relation is bijective
+ * @return false - Relation is not bijective
  */
 bool relation_bijective(struct relation* r) {
     // Relation is bijective if relation is injective and surjective
@@ -1013,11 +1037,11 @@ bool relation_bijective(struct relation* r) {
 }
 
 /**
- * Create reflexive relation closure
+ * @brief Create reflexive relation closure
  * @param r Relation - sorted
  * @param u Universe - sorted
- * @return Pointer to sorted relation closure
- * or NULL if didn't execute correctly
+ * @retval Relation pointer - Reflexive relation closure
+ * @retval NULL - Function failed
  */
 struct relation* relation_closure_ref(struct relation* r, struct universe* u) {
     // Allocate memory for result relation, which is a copy of original
@@ -1071,11 +1095,11 @@ struct relation* relation_closure_ref(struct relation* r, struct universe* u) {
 }
 
 /**
- * Create symmetric relation closure
+ * @brief Create symmetric relation closure
  * @param r Relation - sorted
  * @param u Universe - sorted
- * @return Pointer to symmetric relation closure
- * or NULL if didn't execute correctly
+ * @retval Relation pointer - Symmetric relation closure
+ * @retval NULL - Function failed
  */
 struct relation* relation_closure_sym(struct relation* r) {
     // Create a copy of original relation where additional nodes can be added
@@ -1118,11 +1142,11 @@ struct relation* relation_closure_sym(struct relation* r) {
 }
 
 /**
- * Create transitive relation closure
+ * @brief Create transitive relation closure
  * @param r Relation - sorted
  * @param u Universe - sorted
- * @return Pointer to transitive relation closure
- * or NULL if didn't execute correctly
+ * @retval Relation pointer - Transitive relation closure
+ * @retval NULL - Function failed
  */
 struct relation* relation_closure_trans(struct relation* r) {
     // Create a copy of the original relation
@@ -1183,10 +1207,11 @@ struct relation* relation_closure_trans(struct relation* r) {
 /*---------------------------- SPECIAL COMMANDS -----------------------------*/
 
 /**
- * Select random item from set
+ * @brief Select random item from set
  * @param s Set
  * @param u Universe
- * @return True if set is not empty
+ * @retval true - Item selected successfully
+ * @retval false - Set is empty
  */
 bool select_random_from_set(struct set* s, struct universe* u) {
     // Check if set is empty
@@ -1204,10 +1229,11 @@ bool select_random_from_set(struct set* s, struct universe* u) {
 }
 
 /**
- * Select random item from relation
+ * @brief Select random item from relation
  * @param r Relation
  * @param u Universe
- * @return True if relation is not empty
+ * @retval true - Item selected successfully
+ * @retval false - Relation is empty
  */
 bool select_random_from_relation(struct relation* r, struct universe* u) {
     // Check if relation is empty
@@ -1227,10 +1253,11 @@ bool select_random_from_relation(struct relation* r, struct universe* u) {
 }
 
 /**
- * Select command
+ * @brief Select command
  * @param node Node from universe (set or relation)
  * @param u Universe
- * @return True if node is not empty
+ * @retval true - Item selected successfully
+ * @retval false - Node is empty
  */
 bool select_command(struct store_node* node, struct universe* u) {
     switch (node->type) {
@@ -1247,7 +1274,7 @@ bool select_command(struct store_node* node, struct universe* u) {
 /*------------------------ MEMORY FREEING FUNCTIONS -------------------------*/
 
 /**
- * Free universe struct
+ * @brief Free universe struct
  * @param u Universe
  */
 void free_universe(struct universe* u) {
@@ -1258,7 +1285,7 @@ void free_universe(struct universe* u) {
 }
 
 /**
- * Free set struct
+ * @brief Free set struct
  * @param s Set
  */
 void free_set(struct set* s) {
@@ -1269,7 +1296,7 @@ void free_set(struct set* s) {
 }
 
 /**
- * Free relation struct
+ * @brief Free relation struct
  * @param r Relation
  */
 void free_relation(struct relation* r) {
@@ -1280,7 +1307,7 @@ void free_relation(struct relation* r) {
 }
 
 /**
- * Free command struct
+ * @brief Free command struct
  * @param c Command
  */
 void free_command(struct command* c) {
@@ -1288,7 +1315,7 @@ void free_command(struct command* c) {
 }
 
 /**
- * Free store from memory including all children
+ * @brief Free store from memory including all children
  * @param store Pointer to store
  */
 void free_store(struct store* store) {
@@ -1313,7 +1340,8 @@ void free_store(struct store* store) {
     // Free store itself
     free(store->nodes);
 }
-
+#pragma endregion
+#pragma region COMMAND_DEFS
 // TODO maybe move this into some function
 const struct command_def COMMAND_DEFS[] = {
     // Function name, function pointer, input, output
@@ -1344,9 +1372,10 @@ const struct command_def COMMAND_DEFS[] = {
 /*------------------------------- STORE RUNNER ------------------------------*/
 
 /**
- * Function for procesing bool ouput
+ * @brief Function for procesing bool ouput
  * @param r Result - bool
- * @return True if no error occurred
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_output_bool(bool r,
                          enum function_input input,
@@ -1369,11 +1398,12 @@ bool process_output_bool(bool r,
 }
 
 /**
- * Function for processing set output
+ * @brief Function for processing set output
  * @param s Store
  * @param r Result - relation
  * @param i Program counter
- * @return True if no error occurred
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_output_relation(struct store* s, struct relation* r, int i) {
     // Check if function actually returned valid object
@@ -1393,11 +1423,12 @@ bool process_output_relation(struct store* s, struct relation* r, int i) {
 }
 
 /**
- * Function for processing set output
+ * @brief Function for processing set output
  * @param s Store
  * @param r Result - set
  * @param i Program counter
- * @return True if no error occurred
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_output_set(struct store* s, struct set* r, int i) {
     // Check if function actually returned valid object
@@ -1416,6 +1447,14 @@ bool process_output_set(struct store* s, struct set* r, int i) {
     return true;
 }
 
+/**
+ * @brief Execute function that corresponds
+ * to the given command and return pointer to the result
+ * @param s Store
+ * @param c Command
+ * @param def Command definition
+ * @return void pointer to result of command function
+ */
 void* process_function_input(struct store* s,
                              struct command* c,
                              struct command_def def) {
@@ -1442,10 +1481,12 @@ void* process_function_input(struct store* s,
 }
 
 /**
- * Function for running commands
+ * @brief Function for running commands
  * @param command Command
  * @param store Store
  * @param i Program counter
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool run_command(struct command* command, struct store* store, int* i) {
     struct command_def def = COMMAND_DEFS[command->type];
@@ -1470,9 +1511,10 @@ bool run_command(struct command* command, struct store* store, int* i) {
 }
 
 /**
- * Function for running all things on store
+ * @brief Function for running all things inside store
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool store_runner(struct store* store) {
     for (int i = 0; i < store->size; i++) {
@@ -1499,10 +1541,11 @@ bool store_runner(struct store* store) {
 /*------------------------------- FILE PARSING ------------------------------*/
 
 /**
- * Parse line number
+ * @brief Parse line number
  * @param string String to be parsed
  * @param result Result
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool parse_line_number(char* string, int* result) {
     char* end_p;
@@ -1527,10 +1570,11 @@ bool parse_line_number(char* string, int* result) {
 }
 
 /**
- * Parse universe from file stream
+ * @brief Parse universe from file stream
  * @param fp File pointer
  * @param u Universe
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool parse_universe(FILE* fp, struct universe* u) {
     // Allocate memory for 1 node
@@ -1553,7 +1597,7 @@ bool parse_universe(FILE* fp, struct universe* u) {
             continue;
             // Handle invalid characters
         } else if (!isalpha(c)) {
-            return error("Invalid character in universum\n");
+            return error("Invalid character in universe\n");
         }
 
         if (index >= MAX_STRING_LENGTH) {
@@ -1568,11 +1612,12 @@ bool parse_universe(FILE* fp, struct universe* u) {
 }
 
 /**
- * Parse set from file stream
+ * @brief Parse set from file stream
  * @param fp File pointer
  * @param u Universe
- * @return True if everything went well
- * */
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
+ */
 bool parse_set(FILE* fp, struct set* s, struct universe* u) {
     // Allocate memory for one node
     s->nodes = malloc(sizeof(int));
@@ -1622,66 +1667,84 @@ bool parse_set(FILE* fp, struct set* s, struct universe* u) {
 }
 
 /**
- * Parse relation from file stream
+ * @brief Parse relation from file stream
  * @param fp File pointer
  * @param r Relation
  * @param u Universe
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  * */
 bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
-    // Allocate memory for one node
-    r->nodes = malloc(sizeof(struct relation_node));
+    // TODO - not required?
+    // r->nodes = malloc(sizeof(struct relation_node));
+
     r->size = 0;
     char node[STRING_BUFFER_SIZE] = {0};
     int index = 0;
+    bool read = false, first_loaded = false;
 
     while (true) {
         int c = getc(fp);
-        if (c == '(') {
-            while (c != ')') {
-                c = getc(fp);
 
-                if (c == ' ' || c == ')') {
-                    node[index] = '\0';
-                    index = 0;
-
-                    // Compares relation node to universe node
-                    int max = u->size;
-                    for (int i = 0; i < max; i++) {
-                        if (!(strcmp(node, u->nodes[i]))) {
-                            if (c != ')') {
-                                r->nodes[r->size].a = i;
-                            } else {
-                                r->nodes[r->size].b = i;
-                            }
-                            break;
-                        }
-                        // If the iteration is the last one => relation node
-                        // wasn't found in universe
-                        if (i == max - 1) {
-                            return error(
-                                "S Relation node is not in universe.\n");
-                        }
-                    }
-                    continue;
-                }
-
-                if (index >= MAX_STRING_LENGTH) {
-                    return error("Element name too long!\n");
-                }
-
-                node[index] = c;
-                index++;
-            }
-            r->size++;
-            // Allocate memory for next node
-            r->nodes = srealloc(r->nodes,
-                                sizeof(struct relation_node) * (r->size + 1));
-        }
         // If character is EOF or newline we can end parsing
         if (c == EOF || c == '\n') {
             break;
         }
+
+        // If charcater is '(' => we can start reading nodes
+        if (c == '(') {
+            read = true;
+            // Memory allocation for node that is to be read
+            r->nodes = srealloc(r->nodes,
+                                sizeof(struct relation_node) * (r->size + 1));
+            continue;
+        }
+
+        // If read is false => skip to load next character
+        if (!read) {
+            continue;
+        }
+
+        // If characeter is ' ' or ')' => node was read, we can save it
+        if (c == ' ' || c == ')') {
+            node[index] = '\0';
+            index = 0;
+
+            // Compares relation node to universe node
+            for (int i = 0; i < u->size; i++) {
+                // Checks if relation node is in universe
+                if (!(strcmp(node, u->nodes[i]))) {
+                    // Checks if we are loading first or second node in relation
+                    if (c != ')') {
+                        r->nodes[r->size].a = i;
+                        first_loaded = true;
+                    } else {
+                        // Checks if first node was loaded
+                        if (!first_loaded) {
+                            return error(
+                                "Relation is missing a second node.\n");
+                        }
+                        r->nodes[r->size++].b = i;
+                        read = false;
+                        first_loaded = false;
+                    }
+                    break;
+                }
+                // If the iteration is the last one => relation node wasn't
+                // found in universe
+                if (i == u->size - 1) {
+                    return error("Relation node is not in universe.\n");
+                }
+            }
+
+            continue;
+        }
+
+        // Check max element name length
+        if (index >= MAX_STRING_LENGTH) {
+            return error("Element name too long!\n");
+        }
+        node[index++] = c;
     }
     return true;
 }
@@ -1711,7 +1774,8 @@ bool set_command_type(char* buffer, struct command* command) {
  * @brief Parse command
  * @param fp File pointer
  * @param c Command
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool parse_command(FILE* fp, struct command* command) {
     char buffer[STRING_BUFFER_SIZE] = {0};
@@ -1762,10 +1826,11 @@ bool parse_command(FILE* fp, struct command* command) {
 }
 
 /**
- * Process universe
+ * @brief Process universe
  * @param fp File pointer
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_universe(FILE* fp, struct store* store, bool empty) {
     int index = store->size;
@@ -1809,10 +1874,11 @@ bool process_universe(FILE* fp, struct store* store, bool empty) {
 }
 
 /**
- * Process set
+ * @brief Process set
  * @param fp File pointer
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_set(FILE* fp, struct store* store, bool empty) {
     int index = store->size;
@@ -1841,10 +1907,11 @@ bool process_set(FILE* fp, struct store* store, bool empty) {
 }
 
 /**
- * Process relation
+ * @brief Process relation
  * @param fp File pointer
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_relation(FILE* fp, struct store* store, bool empty) {
     int index = store->size;
@@ -1873,10 +1940,11 @@ bool process_relation(FILE* fp, struct store* store, bool empty) {
 }
 
 /**
- * Process command
+ * @brief Process command
  * @param fp File pointer
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_command(FILE* fp, struct store* store, bool empty) {
     // Command can't be empty
@@ -1901,11 +1969,12 @@ bool process_command(FILE* fp, struct store* store, bool empty) {
 }
 
 /**
- * Process one line
+ * @brief Process one line
  * @param fp File pointer
  * @param c Starting character
  * @param store Store
- * @return True if line was parsed correctly
+ * @retval true - Line was parsed correctly
+ * @retval false - Line wasn't passed correctly
  */
 bool process_line(FILE* fp, char c, struct store* store) {
     int next = getc(fp);
@@ -1933,10 +2002,11 @@ bool process_line(FILE* fp, char c, struct store* store) {
 }
 
 /**
- * Process all lines in file
+ * @brief Process all lines in file
  * @param fp File pointer
  * @param store Store
- * @return True if everything went well
+ * @retval true - Function executed successfully
+ * @retval false - Function failed
  */
 bool process_file(FILE* fp, struct store* store) {
     int allocated = INITIAL_STORE_ALLOC;
@@ -1973,9 +2043,10 @@ bool process_file(FILE* fp, struct store* store) {
 /*---------------------------- FILE MANIPULATION ----------------------------*/
 
 /**
- * Open file
+ * @brief Open file
  * @param filename File name
- * @return File pointer if file was opened successfully, NULL otherwise
+ * @retval File pointer if file was opened successfully
+ * @retval NULL - Error when opening file
  */
 FILE* open_file(char* filename) {
     FILE* fp;
@@ -1990,9 +2061,10 @@ FILE* open_file(char* filename) {
 }
 
 /**
- * Close file
+ * @brief Close file
  * @param fp File pointer
- * @return True if file was successfully closed
+ * @retval true - file was closed successfully
+ * @retval false - Error when closing file
  */
 bool close_file(FILE* fp) {
     if (fclose(fp) == EOF) {
