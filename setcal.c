@@ -1672,59 +1672,67 @@ bool parse_set(FILE* fp, struct set* s, struct universe* u) {
  * @retval false - Function failed
  * */
 bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
-    // Allocate memory for one node
-    r->nodes = malloc(sizeof(struct relation_node));
+    // TODO - not required?
+    // r->nodes = malloc(sizeof(struct relation_node));
+
     r->size = 0;
     char node[STRING_BUFFER_SIZE] = {0};
     int index = 0;
+    bool read = false;
 
     while (true) {
         int c = getc(fp);
-        if (c == '(') {
-            while (c != ')') {
-                c = getc(fp);
 
-                if (c == ' ' || c == ')') {
-                    node[index] = '\0';
-                    index = 0;
-
-                    // Compares relation node to universe node
-                    int max = u->size;
-                    for (int i = 0; i < max; i++) {
-                        if (!(strcmp(node, u->nodes[i]))) {
-                            if (c != ')') {
-                                r->nodes[r->size].a = i;
-                            } else {
-                                r->nodes[r->size].b = i;
-                            }
-                            break;
-                        }
-                        // If the iteration is the last one => relation node
-                        // wasn't found in universe
-                        if (i == max - 1) {
-                            return error(
-                                "S Relation node is not in universe.\n");
-                        }
-                    }
-                    continue;
-                }
-
-                if (index >= MAX_STRING_LENGTH) {
-                    return error("Element name too long!\n");
-                }
-
-                node[index] = c;
-                index++;
-            }
-            r->size++;
-            // Allocate memory for next node
-            r->nodes = srealloc(r->nodes,
-                                sizeof(struct relation_node) * (r->size + 1));
-        }
         // If character is EOF or newline we can end parsing
         if (c == EOF || c == '\n') {
             break;
         }
+
+        // If charcater is '(' => we can start reading nodes
+        if (c == '(') {
+            read = true;
+            // Memory allocation for node that is to be read
+            r->nodes = srealloc(r->nodes, sizeof(struct relation_node) * (r->size + 1));
+            continue;
+        }
+
+        // If read is false => skip to load next character
+        if (!read) {
+            continue;
+        }
+
+        // If characeter is ' ' or ')' => node was read, we can save it
+        if (c == ' ' || c == ')') {
+            node[index] = '\0';
+            index = 0;
+
+            // Compares relation node to universe node
+            for (int i = 0; i < u->size; i++) {
+                // Checks if relation node is in universe
+                if (!(strcmp(node, u->nodes[i]))) {
+                    // Checks if we are loading first or second node in relation
+                    if (c != ')') {
+                        r->nodes[r->size].a = i;
+                    } else {
+                        r->nodes[r->size++].b = i;
+                        read = false;
+                    }
+                    break;
+                }
+                // If the iteration is the last one => relation node wasn't found in universe
+                if (i == u->size - 1) {
+                    return error("S Relation node is not in universe.\n");
+                }
+            }
+
+            continue;
+        }
+
+        // Check max element name length
+        if (index >= MAX_STRING_LENGTH) {
+            return error("Element name too long!\n");
+        }
+        node[index++] = c;
     }
     return true;
 }
