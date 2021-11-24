@@ -28,6 +28,8 @@
 
 // Define initial allocation sizes
 #define INITIAL_STORE_ALLOC 10
+#define INITIAL_SET_ALLOC 10
+#define INITIAL_RELATION_ALLOC 10
 
 #pragma endregion
 #pragma region ENUMS
@@ -159,7 +161,7 @@ void relation_sort(struct relation* r) {
  */
 void* srealloc(void* block, size_t size) {
     void* new = realloc(block, size);
-    // Check if relloc failed
+    // Check if realloc failed
     if (new == NULL) {
         // Free old block
         free(block);
@@ -1685,60 +1687,76 @@ bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
 }
 
 /**
- * Parse command
+ * @brief Set the command type based on string buffer
+ *
+ * @param buffer String buffer
+ * @param command Command
+ * @return true When command was found
+ * @return false Command wasn't found
+ */
+bool set_command_type(char* buffer, struct command* command) {
+    // Calculate command defs size
+    const int command_count = sizeof(COMMAND_DEFS) / sizeof(COMMAND_DEFS[0]);
+    // Loop over all commnad defs
+    for (int i = 0; i < command_count; i++) {
+        if (strcmp(COMMAND_DEFS[i].name, buffer) == 0) {
+            command->type = i;
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * @brief Parse command
  * @param fp File pointer
  * @param c Command
  * @return True if everything went well
  */
 bool parse_command(FILE* fp, struct command* command) {
-    // TODO handle overflow
     char buffer[STRING_BUFFER_SIZE] = {0};
     int index = 0;
     int argument = 0;
     command->argc = 0;
 
+    // Loop over all chars
     while (true) {
-        int c = getc(fp);
-        bool end = c == EOF || c == '\n';
-
+        const int c = getc(fp);
+        const bool end = c == EOF || c == '\n';
+        // Reset after each space or end
         if (c == ' ' || end) {
             buffer[index] = '\0';
             index = 0;
             if (argument == 0) {
-                // Find command string
-                bool found = false;
-                int command_count =
-                    sizeof(COMMAND_DEFS) / sizeof(COMMAND_DEFS[0]);
-                for (int i = 0; i < command_count; i++) {
-                    if (strcmp(COMMAND_DEFS[i].name, buffer) == 0) {
-                        found = true;
-                        command->type = i;
-                        break;
-                    }
-                }
-                if (!found) {
-                    return false;
+                // Find command string in command definitions
+                if (!set_command_type(buffer, command)) {
+                    return error("Command wasn't found!\n");
                 }
             } else {
+                // Check argument count
                 if (argument > MAX_COMMAND_ARGUMENTS) {
-                    return false;
+                    return error("Too many command arguments!\n");
                 }
-                int result = 0;
-                if (!parse_line_number(buffer, &result)) {
-                    return false;
+                // Parse line number
+                if (!parse_line_number(buffer, &command->args[argument - 1])) {
+                    return error("Invalid line number!\n");
                 }
-                command->args[argument - 1] = result;
                 command->argc++;
             }
+            // End after EOF or \n
             if (end) {
                 return true;
             }
             argument++;
-            continue;
+        } else {
+            // Check max buffer size
+            if (index >= MAX_STRING_LENGTH) {
+                return error("Command (argument) too long!\n");
+            }
+            // Write to buffer
+            buffer[index] = c;
+            index++;
         }
-        // TODO fix buffer overflow
-        buffer[index] = c;
-        index++;
     }
     return true;
 }
