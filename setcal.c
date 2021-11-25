@@ -2180,6 +2180,42 @@ bool check_arguments(int argc) {
 #pragma region ENTRY
 /*---------------------------------- ENTRY ----------------------------------*/
 
+/**
+ * @brief Init store object
+ *
+ * @param store Store
+ * @return true When everything went well
+ * @return false When some malloc failed
+ */
+bool init_store(struct store* store) {
+    // Init store itself
+    store->size = 0;
+    store->nodes = malloc(sizeof(struct store_node) * INITIAL_STORE_ALLOC);
+    if (store->nodes == NULL) {
+        return alloc_error();
+    }
+    // Init universe
+    store->universe = NULL;
+    // Init empty set object
+    store->empty_set = malloc(sizeof(struct set));
+    if (store->empty_set == NULL) {
+        free_store(store);
+        return alloc_error();
+    }
+    store->empty_set->nodes = NULL;
+    store->empty_set->size = 0;
+    // Init empty relation object
+    store->empty_relation = malloc(sizeof(struct relation));
+    if (store->empty_relation == NULL) {
+        free_store(store);
+        return alloc_error();
+    }
+    store->empty_relation->nodes = NULL;
+    store->empty_relation = 0;
+    // Everything went well
+    return true;
+}
+
 int main(int argc, char* argv[]) {
     // Check number of arguments
     if (!check_arguments(argc)) {
@@ -2195,22 +2231,13 @@ int main(int argc, char* argv[]) {
     // Seed random generator
     srand(time(NULL));
 
-    // Process file
+    // Initialize store object
     struct store store;
-    // TODO: Move this to a function and check all mallocs
-    store.size = 0;
-    store.nodes = malloc(sizeof(struct store_node) * INITIAL_STORE_ALLOC);
-    store.universe = NULL;
-    store.empty_set = malloc(sizeof(struct set));
-    store.empty_set->nodes = NULL;
-    store.empty_set->size = 0;
-    store.empty_relation = malloc(sizeof(struct relation));
-    store.empty_relation->nodes = NULL;
-    store.empty_relation = 0;
-    if (store.nodes == NULL) {
-        error("Malloc error!\n");
+    if (!init_store(&store)) {
         return EXIT_FAILURE;
     }
+
+    // Process whole file
     if (!process_file(fp, &store)) {
         free_store(&store);
         close_file(fp);
