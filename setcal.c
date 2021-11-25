@@ -42,10 +42,11 @@ enum function_input {
     IN_SET_SET,
     IN_SET_UNIVERSE,
     IN_RELATION,
-    IN_RELATION_UNIVERSE
+    IN_RELATION_UNIVERSE,
+    IN_ANY
 };
 
-enum function_output { OUT_VOID, OUT_BOOL, OUT_SET, OUT_RELATION };
+enum function_output { OUT_VOID, OUT_BOOL, OUT_SET, OUT_RELATION, OUT_SELECT };
 #pragma endregion
 #pragma region STRUCTS
 /*--------------------------------- STRUCTS ---------------------------------*/
@@ -103,6 +104,14 @@ struct store {
     struct set* empty_set;            // Empty set instance
     struct relation* empty_relation;  // Empty relation instance
 };
+
+// Struct for select command result
+struct select_result {
+    bool error;
+    bool empty;
+    struct set* item;
+};
+
 #pragma endregion
 #pragma region SORTING
 /*--------------------------------- SORTING ---------------------------------*/
@@ -244,6 +253,8 @@ int get_argument_count(enum function_input input_type) {
             return 1;
         case IN_SET_SET:
             return 2;
+        case IN_ANY:
+            return 1;
     }
     return 1;
 }
@@ -396,6 +407,10 @@ bool command_arguments_valid(struct command* command,
             command->argc != argument_count + 1) {
             return false;
         }
+    } else if (def.output == OUT_SELECT) {
+        if (command->argc != 2) {
+            return false;
+        }
     } else {
         if (command->argc != argument_count) {
             return false;
@@ -414,6 +429,8 @@ bool command_arguments_valid(struct command* command,
             return store->nodes[command->args[0] - 1].type != SET;
         case IN_RELATION_UNIVERSE:
             return store->nodes[command->args[0] - 1].type != SET;
+        case IN_ANY:
+            return true;
     }
 
     return true;
@@ -1233,64 +1250,89 @@ struct relation* relation_closure_trans(struct relation* r) {
  * @brief Select random item from set
  * @param s Set
  * @param u Universe
- * @retval true - Item selected successfully
- * @retval false - Set is empty
  */
-bool select_random_from_set(struct set* s, struct universe* u) {
+void select_random_from_set(struct set* s, struct select_result* result) {
     // Check if set is empty
     if (set_empty(s)) {
-        return false;
+        result->empty = true;
+        return;
     }
     // Get random index to set
     int rand_index = rand() % s->size;
-    // Find index to universe
-    int universe_index = s->nodes[rand_index];
-    // Print element from universe
-    printf("%s\n", u->nodes[universe_index]);
 
-    return true;
+    result->item = malloc(sizeof(struct set));
+    if (result->item == NULL) {
+        result->error = true;
+        return;
+    }
+    result->item->size = 1;
+    result->item->nodes = malloc(sizeof(int));
+    if (result->item->nodes == NULL) {
+        free(result->item);
+        result->error = true;
+        return;
+    }
+
+    result->item->nodes[0] = s->nodes[rand_index];
 }
 
 /**
  * @brief Select random item from relation
  * @param r Relation
  * @param u Universe
- * @retval true - Item selected successfully
- * @retval false - Relation is empty
  */
-bool select_random_from_relation(struct relation* r, struct universe* u) {
+void select_random_from_relation(struct relation* r,
+                                 struct select_result* result) {
     // Check if relation is empty
     if (r->size == 0) {
-        return false;
+        result->empty = true;
+        return;
     }
     // Get random index to relation
     int rand_index = rand() % r->size;
     // Find a, b in relation
     struct relation_node node = r->nodes[rand_index];
-    // Randomly select index to universe from a, b
-    int universe_index = rand() % 2 == 0 ? node.a : node.b;
-    // Print element from universe
-    printf("%s\n", u->nodes[universe_index]);
 
-    return true;
+    result->item = malloc(sizeof(struct set));
+    if (result->item == NULL) {
+        result->error = true;
+        return;
+    }
+    result->item->size = 1;
+    result->item->nodes = malloc(sizeof(int));
+    if (result->item->nodes == NULL) {
+        free(result->item);
+        result->error = true;
+        return;
+    }
+
+    result->item->nodes[0] = rand() % 2 == 0 ? node.a : node.b;
 }
 
 /**
  * @brief Select command
  * @param node Node from universe (set or relation)
  * @param u Universe
- * @retval true - Item selected successfully
- * @retval false - Node is empty
+ * @return Select result
  */
-bool select_command(struct store_node* node, struct universe* u) {
-    switch (node->type) {
-        case SET:
-            return select_random_from_set(node->obj, u);
-        case RELATION:
-            return select_random_from_relation(node->obj, u);
-        default:
-            return error("Invalid node type!\n");
+struct select_result* select_command(struct store_node* node) {
+    struct select_result* result = malloc(sizeof(struct select_result));
+    if (result == NULL) {
+        return NULL;
     }
+    result->empty = false;
+    result->error = false;
+    result->item = NULL;
+
+    if (node->type == SET) {
+        select_random_from_set(node->obj, result);
+    } else if (node->type == RELATION) {
+        select_random_from_relation(node->obj, result);
+    } else {
+        result->empty = true;
+    }
+
+    return result;
 }
 #pragma endregion
 #pragma region MEMORY FREEING FUNCTIONS
@@ -1393,10 +1435,30 @@ const struct command_def COMMAND_DEFS[] = {
     {"bijective", relation_bijective, IN_RELATION, OUT_BOOL},
     {"closure_ref", relation_closure_ref, IN_RELATION_UNIVERSE, OUT_RELATION},
     {"closure_sym", relation_closure_sym, IN_RELATION, OUT_RELATION},
-    {"closure_trans", relation_closure_trans, IN_RELATION, OUT_RELATION}};
+    {"closure_trans", relation_closure_trans, IN_RELATION, OUT_RELATION},
+    {"select", select_command, IN_ANY, OUT_SELECT}};
 #pragma endregion
 #pragma region STORE RUNNER
 /*------------------------------- STORE RUNNER ------------------------------*/
+
+/**
+ * @brief Function for making jumps inside file
+ *
+ * @param input Input
+ * @param command Command
+ * @param i Program counter to be modified
+ */
+void make_jump(enum function_input input, struct command* command, int* i) {
+    int arg_count = get_argument_count(input);
+
+    // Jump
+    if (arg_count < command->argc) {
+        // Use last argument as new program counter location
+        // One -1 is for line to index mapping
+        // Second -1 is to account for i++ in next cycle
+        *i = command->args[command->argc - 1] - 2;
+    }
+}
 
 /**
  * @brief Function for procesing bool ouput
@@ -1413,15 +1475,7 @@ bool process_output_bool(bool r,
 
     // Handle jumping by modifying program counter
     if (!r) {
-        int arg_count = get_argument_count(input);
-
-        // Jump
-        if (arg_count < command->argc) {
-            // Use last argument as new program counter location
-            // One -1 is for line to index mapping
-            // Second -1 is to account for i++ in next cycle
-            *i = command->args[command->argc - 1] - 2;
-        }
+        make_jump(input, command, i);
     }
     return true;
 }
@@ -1477,6 +1531,41 @@ bool process_output_set(struct store* s, struct set* r, int i) {
 }
 
 /**
+ * @brief Process select output
+ *
+ * @param s Set
+ * @param result Select result
+ * @param input Function input
+ * @param command Command
+ * @param i Program counter
+ * @return true If everything went well
+ * @return false If malloc failed
+ */
+bool process_output_select(struct store* s,
+                           struct select_result* result,
+                           enum function_input input,
+                           struct command* command,
+                           int* i) {
+    // Check malloc
+    if (result == NULL || result->error) {
+        return alloc_error();
+    }
+
+    if (result->empty) {
+        // Jump
+        make_jump(input, command, i);
+    } else {
+        // Proccess this as normal set result
+        process_output_set(s, result->item, *i);
+    }
+
+    // Free result
+    free(result);
+
+    return true;
+}
+
+/**
  * @brief Retrieve argument for function, mainly for empty set and relation
  * handling
  *
@@ -1488,9 +1577,9 @@ bool process_output_set(struct store* s, struct set* r, int i) {
  */
 void* retrieve_arg(struct store* s,
                    struct command* c,
-                   int line,
+                   int arg_index,
                    enum store_node_type type) {
-    struct store_node node = s->nodes[c->args[line] - 1];
+    struct store_node node = s->nodes[c->args[arg_index] - 1];
 
     // If node is command we have to map it to correct empty object
     if (node.type == COMMAND) {
@@ -1539,6 +1628,10 @@ void* process_function_input(struct store* s,
             void* (*f)(struct relation*, struct universe*) = def.function;
             return f(retrieve_arg(s, c, 0, RELATION), s->universe);
         }
+        case IN_ANY: {
+            void* (*f)(struct store_node*) = def.function;
+            return f(&s->nodes[c->args[0] - 1]);
+        }
         default:
             return NULL;
     }
@@ -1570,6 +1663,8 @@ bool run_command(struct command* command, struct store* store, int* i) {
             return process_output_bool(result, def.input, command, i);
         case OUT_VOID:
             return true;
+        case OUT_SELECT:
+            return process_output_select(store, result, def.input, command, i);
     }
     return true;
 }
@@ -2211,7 +2306,7 @@ bool init_store(struct store* store) {
         return alloc_error();
     }
     store->empty_relation->nodes = NULL;
-    store->empty_relation = 0;
+    store->empty_relation->size = 0;
     // Everything went well
     return true;
 }
