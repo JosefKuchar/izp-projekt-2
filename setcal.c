@@ -97,9 +97,11 @@ struct store_node {
 
 // Struct to keep track of every node inside store
 struct store {
-    int size;                   // Store size
-    struct store_node* nodes;   // Store nodes
-    struct universe* universe;  // Universe
+    int size;                         // Store size
+    struct store_node* nodes;         // Store nodes
+    struct universe* universe;        // Universe
+    struct set* empty_set;            // Empty set instance
+    struct relation* empty_relation;  // Empty relation instance
 };
 #pragma endregion
 #pragma region SORTING
@@ -402,16 +404,16 @@ bool command_arguments_valid(struct command* command,
     // Check if argument types match input types
     switch (def.input) {
         case IN_SET:
-            return store->nodes[command->args[0] - 1].type == SET;
+            return store->nodes[command->args[0] - 1].type != RELATION;
         case IN_SET_UNIVERSE:
-            return store->nodes[command->args[0] - 1].type == SET;
+            return store->nodes[command->args[0] - 1].type != RELATION;
         case IN_SET_SET:
-            return store->nodes[command->args[0] - 1].type == SET &&
-                   store->nodes[command->args[1] - 1].type == SET;
+            return store->nodes[command->args[0] - 1].type != RELATION &&
+                   store->nodes[command->args[1] - 1].type != RELATION;
         case IN_RELATION:
-            return store->nodes[command->args[0] - 1].type == RELATION;
+            return store->nodes[command->args[0] - 1].type != SET;
         case IN_RELATION_UNIVERSE:
-            return store->nodes[command->args[0] - 1].type == RELATION;
+            return store->nodes[command->args[0] - 1].type != SET;
     }
 
     return true;
@@ -1358,6 +1360,10 @@ void free_store(struct store* store) {
     // Free universe
     free_universe(store->universe);
 
+    // Free empty objects
+    free_set(store->empty_set);
+    free_relation(store->empty_relation);
+
     // Free store itself
     free(store->nodes);
 }
@@ -1412,7 +1418,9 @@ bool process_output_bool(bool r,
         // Jump
         if (arg_count < command->argc) {
             // Use last argument as new program counter location
-            *i = command->args[command->argc - 1] - 1;
+            // One -1 is for line to index mapping
+            // Second -1 is to account for i++ in next cycle
+            *i = command->args[command->argc - 1] - 2;
         }
     }
     return true;
@@ -1469,6 +1477,37 @@ bool process_output_set(struct store* s, struct set* r, int i) {
 }
 
 /**
+ * @brief Retrieve argument for function, mainly for empty set and relation
+ * handling
+ *
+ * @param s Store
+ * @param c Command
+ * @param arg_index Argument index
+ * @param type Expected argument type
+ * @return Function argument
+ */
+void* retrieve_arg(struct store* s,
+                   struct command* c,
+                   int line,
+                   enum store_node_type type) {
+    struct store_node node = s->nodes[c->args[line] - 1];
+
+    // If node is command we have to map it to correct empty object
+    if (node.type == COMMAND) {
+        // Return object based on expected type
+        if (type == SET) {
+            // Return empty set
+            return s->empty_set;
+        } else {
+            // Return empty relation
+            return s->empty_relation;
+        }
+    } else {
+        return node.obj;
+    }
+}
+
+/**
  * @brief Execute function that corresponds
  * to the given command and return pointer to the result
  * @param s Store
@@ -1480,22 +1519,26 @@ void* process_function_input(struct store* s,
                              struct command* c,
                              struct command_def def) {
     switch (def.input) {
-        case IN_SET:;
-            void* (*f_s)(struct set*) = def.function;
-            return f_s(s->nodes[c->args[0] - 1].obj);
-        case IN_SET_SET:;
-            void* (*f_s_s)(struct set*, struct set*) = def.function;
-            return f_s_s(s->nodes[c->args[0] - 1].obj,
-                         s->nodes[c->args[1] - 1].obj);
-        case IN_SET_UNIVERSE:;
-            void* (*f_s_u)(struct set*, struct universe*) = def.function;
-            return f_s_u(s->nodes[c->args[0] - 1].obj, s->universe);
-        case IN_RELATION:;
-            void* (*f_r)(struct relation*) = def.function;
-            return f_r(s->nodes[c->args[0] - 1].obj);
-        case IN_RELATION_UNIVERSE:;
-            void* (*f_r_u)(struct relation*, struct universe*) = def.function;
-            return f_r_u(s->nodes[c->args[0] - 1].obj, s->universe);
+        case IN_SET: {
+            void* (*f)(struct set*) = def.function;
+            return f(retrieve_arg(s, c, 0, SET));
+        }
+        case IN_SET_SET: {
+            void* (*f)(struct set*, struct set*) = def.function;
+            return f(retrieve_arg(s, c, 0, SET), retrieve_arg(s, c, 1, SET));
+        }
+        case IN_SET_UNIVERSE: {
+            void* (*f)(struct set*, struct universe*) = def.function;
+            return f(retrieve_arg(s, c, 0, SET), s->universe);
+        }
+        case IN_RELATION: {
+            void* (*f)(struct relation*) = def.function;
+            return f(retrieve_arg(s, c, 0, RELATION));
+        }
+        case IN_RELATION_UNIVERSE: {
+            void* (*f)(struct relation*, struct universe*) = def.function;
+            return f(retrieve_arg(s, c, 0, RELATION), s->universe);
+        }
         default:
             return NULL;
     }
@@ -2154,9 +2197,16 @@ int main(int argc, char* argv[]) {
 
     // Process file
     struct store store;
+    // TODO: Move this to a function and check all mallocs
     store.size = 0;
     store.nodes = malloc(sizeof(struct store_node) * INITIAL_STORE_ALLOC);
     store.universe = NULL;
+    store.empty_set = malloc(sizeof(struct set));
+    store.empty_set->nodes = NULL;
+    store.empty_set->size = 0;
+    store.empty_relation = malloc(sizeof(struct relation));
+    store.empty_relation->nodes = NULL;
+    store.empty_relation = 0;
     if (store.nodes == NULL) {
         error("Malloc error!\n");
         return EXIT_FAILURE;
