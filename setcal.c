@@ -2170,7 +2170,8 @@ bool process_line(FILE* fp, char c, struct store* store) {
     // This shouldn't happen with valid file
     // Ensure that universe will be first and present only once
     if ((next != ' ' && !empty) ||
-        (store->size != 0 && store->universe == NULL)) {
+        (store->size != 0 && store->universe == NULL) ||
+        (c == 'U' && store->size > 0)) {
         return false;
     }
 
