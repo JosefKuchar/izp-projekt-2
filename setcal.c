@@ -1030,7 +1030,10 @@ struct set* relation_codomain(struct relation* r) {
  * @retval true - Relation is injective
  * @retval false - Relation is not injective
  */
-bool relation_injective(struct relation* r) {
+bool relation_injective(struct relation* r, struct set* a, struct set* b) {
+    //TODO Clean-up
+    (void)a;
+    (void)b;
     // Loop around all nodes
     for (int i = 0; i < r->size; i++) {
         // Loop around all remaining nodes
@@ -1053,11 +1056,22 @@ bool relation_injective(struct relation* r) {
  * @return true - Relation is surjective
  * @return false - Relation is not surjective
  */
-bool relation_surjective(struct relation* r) {
-    // Loop around all nodes
-    for (int i = 1; i < r->size; i++) {
-        // If current node is same as next node => relation is not surjective
-        if (r->nodes[i].a == r->nodes[i - 1].a) {
+bool relation_surjective(struct relation* r, struct set* a, struct set* b) {
+    //TODO clean
+    (void)a;
+    (void)b;
+    if (b->size > r->size){
+        return false;
+    }
+
+    for (int i = 0; i < b->size; i++){
+        bool found = false;
+        for (int j = 0; j < r->size; j++){
+            if(r->nodes[j].b == b->nodes[i]){
+                found = true;
+            }
+        }
+        if (!found){
             return false;
         }
     }
@@ -1071,9 +1085,9 @@ bool relation_surjective(struct relation* r) {
  * @retval true - Relation is bijective
  * @return false - Relation is not bijective
  */
-bool relation_bijective(struct relation* r) {
+bool relation_bijective(struct relation* r, struct set* a, struct set* b) {
     // Relation is bijective if relation is injective and surjective
-    return relation_injective(r) && relation_surjective(r);
+    return relation_injective(r, a, b) && relation_surjective(r, a, b);
 }
 
 /**
