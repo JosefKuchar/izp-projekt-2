@@ -43,6 +43,7 @@ enum function_input {
     IN_SET_UNIVERSE,
     IN_RELATION,
     IN_RELATION_UNIVERSE,
+    IN_RELATION_SET_SET,
     IN_ANY
 };
 
@@ -251,6 +252,8 @@ int get_argument_count(enum function_input input_type) {
             return 1;
         case IN_RELATION_UNIVERSE:
             return 1;
+        case IN_RELATION_SET_SET:
+            return 3;
         case IN_SET_SET:
             return 2;
         case IN_ANY:
@@ -429,6 +432,10 @@ bool command_arguments_valid(struct command* command,
             return store->nodes[command->args[0] - 1].type != SET;
         case IN_RELATION_UNIVERSE:
             return store->nodes[command->args[0] - 1].type != SET;
+        case IN_RELATION_SET_SET:
+            return store->nodes[command->args[0] - 1].type != SET &&
+                   store->nodes[command->args[1] - 1].type != RELATION &&
+                   store->nodes[command->args[2] - 1].type != RELATION;
         case IN_ANY:
             return true;
     }
@@ -1057,25 +1064,35 @@ bool relation_injective(struct relation* r, struct set* a, struct set* b) {
  * @return false - Relation is not surjective
  */
 bool relation_surjective(struct relation* r, struct set* a, struct set* b) {
-    //TODO clean
+    //TODO Clean-up
     (void)a;
     (void)b;
-    if (b->size > r->size){
-        return false;
-    }
-
-    for (int i = 0; i < b->size; i++){
-        bool found = false;
-        for (int j = 0; j < r->size; j++){
-            if(r->nodes[j].b == b->nodes[i]){
-                found = true;
+    int unique_second_elements = 0;
+    for (int i = 0; i < r->size; i++){
+        bool duplicate = false;
+        for (int j = i - 1; j >= 0; j--){
+            if(r->nodes[i].b == r->nodes[j].b){
+                duplicate = true;
+                break;
             }
         }
-        if (!found){
-            return false;
+        if (!duplicate){
+            unique_second_elements++;
         }
     }
-    return true;
+    return unique_second_elements == b->size;
+    // for (int i = 0; i < b->size; i++){
+    //     bool found = false;
+    //     for (int j = 0; j < r->size; j++){
+    //         if(r->nodes[j].b == b->nodes[i]){
+    //             found = true;
+    //         }
+    //     }
+    //     if (!found){
+    //         return false;
+    //     }
+    // }
+    // return true;
 }
 
 /**
@@ -1444,9 +1461,9 @@ const struct command_def COMMAND_DEFS[] = {
     {"function", relation_function, IN_RELATION, OUT_BOOL},
     {"domain", relation_domain, IN_RELATION, OUT_SET},
     {"codomain", relation_codomain, IN_RELATION, OUT_SET},
-    {"injective", relation_injective, IN_RELATION, OUT_BOOL},
-    {"surjective", relation_surjective, IN_RELATION, OUT_BOOL},
-    {"bijective", relation_bijective, IN_RELATION, OUT_BOOL},
+    {"injective", relation_injective, IN_RELATION_SET_SET, OUT_BOOL},
+    {"surjective", relation_surjective, IN_RELATION_SET_SET, OUT_BOOL},
+    {"bijective", relation_bijective, IN_RELATION_SET_SET, OUT_BOOL},
     {"closure_ref", relation_closure_ref, IN_RELATION_UNIVERSE, OUT_RELATION},
     {"closure_sym", relation_closure_sym, IN_RELATION, OUT_RELATION},
     {"closure_trans", relation_closure_trans, IN_RELATION, OUT_RELATION},
@@ -1641,6 +1658,11 @@ void* process_function_input(struct store* s,
         case IN_RELATION_UNIVERSE: {
             void* (*f)(struct relation*, struct universe*) = def.function;
             return f(retrieve_arg(s, c, 0, RELATION), s->universe);
+        }
+        case IN_RELATION_SET_SET: {
+            void* (*f)(struct relation*, struct set*, struct set*) = def.function;
+            return f(retrieve_arg(s, c, 0, RELATION), retrieve_arg(s, c, 1, SET),
+            retrieve_arg(s, c, 2, SET));
         }
         case IN_ANY: {
             void* (*f)(struct store_node*) = def.function;
