@@ -1031,14 +1031,54 @@ struct set* relation_codomain(struct relation* r) {
 }
 
 /**
+ * @brief Find out if r only contains elements of set a and set b
+ * 
+ * @param r Relation
+ * @param a Set A
+ * @param b Set B
+ * @retval true - Relation only contains elements from sets 
+ * @retval false - Relation contains element(s) that aren't in sets
+ */
+bool relation_valid_sets(struct relation* r, struct set* a, struct set* b){
+    for (int i = 0; i < r->size; i++){
+        // Find if set a contains first element
+        bool found = false;
+        for (int j = 0; j < a->size; j++){
+            if (r->nodes[i].a == a->nodes[j]){
+                found = true;
+                break;
+            }
+        }
+        if(!found){
+            return false;
+        }
+
+        // Find if set b contains first element
+        found = false;
+        for (int j = 0; j < b->size; j++){
+            if (r->nodes[i].b == b->nodes[j]){
+                found = true;
+                break;
+            }
+        }
+        if(!found){
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
  * @brief Find out if relation is injective
  *
- * @param r Relation sorted
+ * @param r Relation - sorted
  * @retval true - Relation is injective
  * @retval false - Relation is not injective
  */
 bool relation_injective(struct relation* r, struct set* a, struct set* b) {
-    (void)b;
+    if(!relation_valid_sets(r, a, b)){
+        return false;
+    }
     // First elements must be unique
     if (!relation_function(r)){
         return false;
@@ -1056,7 +1096,9 @@ bool relation_injective(struct relation* r, struct set* a, struct set* b) {
  * @return false - Relation is not surjective
  */
 bool relation_surjective(struct relation* r, struct set* a, struct set* b) {
-    (void)a;
+    if(!relation_valid_sets(r, a, b)){
+        return false;
+    }
     // All elements from set b have to be in relation (second position)
     // There can be duplicates as well
     int unique_second_elements = 0;
