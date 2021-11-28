@@ -5,3 +5,9 @@ S
 C intersect 2 3
 C minus 2 3
 C empty 4
+C surjective 3 1 2
+C surjective 4 1 2
+C surjective 5 1 2
+C injective 3 2 1
+C injective 4 1 2
+C injective 6 1 2

@@ -1038,22 +1038,14 @@ struct set* relation_codomain(struct relation* r) {
  * @retval false - Relation is not injective
  */
 bool relation_injective(struct relation* r, struct set* a, struct set* b) {
-    //TODO Clean-up
-    (void)a;
     (void)b;
-    // Loop around all nodes
-    for (int i = 0; i < r->size; i++) {
-        // Loop around all remaining nodes
-        for (int j = i + 1; j < r->size; j++) {
-            // If current node has first or second element same as one of the
-            // remaining nodes => not injective
-            if ((r->nodes[i].a == r->nodes[j].a) ||
-                (r->nodes[i].b == r->nodes[j].b)) {
-                return false;
-            }
-        }
+    // First elements must be unique
+    if (!relation_function(r)){
+        return false;
     }
-    return true;
+
+    // All elements from a must be in a
+    return a->size == r->size;
 }
 
 /**
@@ -1064,9 +1056,9 @@ bool relation_injective(struct relation* r, struct set* a, struct set* b) {
  * @return false - Relation is not surjective
  */
 bool relation_surjective(struct relation* r, struct set* a, struct set* b) {
-    //TODO Clean-up
     (void)a;
-    (void)b;
+    // All elements from set b have to be in relation (second position)
+    // There can be duplicates as well
     int unique_second_elements = 0;
     for (int i = 0; i < r->size; i++){
         bool duplicate = false;
@@ -1081,18 +1073,6 @@ bool relation_surjective(struct relation* r, struct set* a, struct set* b) {
         }
     }
     return unique_second_elements == b->size;
-    // for (int i = 0; i < b->size; i++){
-    //     bool found = false;
-    //     for (int j = 0; j < r->size; j++){
-    //         if(r->nodes[j].b == b->nodes[i]){
-    //             found = true;
-    //         }
-    //     }
-    //     if (!found){
-    //         return false;
-    //     }
-    // }
-    // return true;
 }
 
 /**
@@ -2207,7 +2187,8 @@ bool process_line(FILE* fp, char c, struct store* store) {
     // Ensure that universe will be first and present only once
     if ((next != ' ' && !empty) ||
         (store->size != 0 && store->universe == NULL) ||
-        (c == 'U' && store->size > 0)) {
+        (c == 'U' && store->size > 0) ||
+        (store->size == 0 && c != 'U')) {
         return false;
     }
 
@@ -2297,7 +2278,7 @@ bool close_file(FILE* fp) {
 /*------------------------ PROGRAM ARGUMENT FUNCTIONS ------------------------*/
 
 /**
- * Check number of arguments
+ * @brief Check number of arguments
  * @param argc Number of arguments
  * @return True if number of arguments is correct
  */
