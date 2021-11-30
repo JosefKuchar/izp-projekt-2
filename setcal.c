@@ -288,13 +288,13 @@ bool alloc_error() {
  * @param item_size Size of one item
  * @return True if allocation was successful
  */
-bool smart_realloc(void* block, int current, int* allocated, int item_size) {
+bool smart_realloc(void** block, int current, int* allocated, int item_size) {
     if (current > *allocated) {
         *allocated *= 2;
         // Allocate new memory
-        block = srealloc(block, item_size * (*allocated));
+        *block = srealloc(*block, item_size * (*allocated));
         // Handle realloc error
-        if (block == NULL) {
+        if (*block == NULL) {
             return false;
         }
     }
@@ -1032,36 +1032,36 @@ struct set* relation_codomain(struct relation* r) {
 
 /**
  * @brief Find out if r only contains elements of set a and set b
- * 
+ *
  * @param r Relation
  * @param a Set A
  * @param b Set B
- * @retval true - Relation only contains elements from sets 
+ * @retval true - Relation only contains elements from sets
  * @retval false - Relation contains element(s) that aren't in sets
  */
-bool relation_valid_sets(struct relation* r, struct set* a, struct set* b){
-    for (int i = 0; i < r->size; i++){
+bool relation_valid_sets(struct relation* r, struct set* a, struct set* b) {
+    for (int i = 0; i < r->size; i++) {
         // Find if set a contains first element
         bool found = false;
-        for (int j = 0; j < a->size; j++){
-            if (r->nodes[i].a == a->nodes[j]){
+        for (int j = 0; j < a->size; j++) {
+            if (r->nodes[i].a == a->nodes[j]) {
                 found = true;
                 break;
             }
         }
-        if(!found){
+        if (!found) {
             return false;
         }
 
         // Find if set b contains first element
         found = false;
-        for (int j = 0; j < b->size; j++){
-            if (r->nodes[i].b == b->nodes[j]){
+        for (int j = 0; j < b->size; j++) {
+            if (r->nodes[i].b == b->nodes[j]) {
                 found = true;
                 break;
             }
         }
-        if(!found){
+        if (!found) {
             return false;
         }
     }
@@ -1076,11 +1076,11 @@ bool relation_valid_sets(struct relation* r, struct set* a, struct set* b){
  * @retval false - Relation is not injective
  */
 bool relation_injective(struct relation* r, struct set* a, struct set* b) {
-    if(!relation_valid_sets(r, a, b)){
+    if (!relation_valid_sets(r, a, b)) {
         return false;
     }
     // First elements must be unique
-    if (!relation_function(r)){
+    if (!relation_function(r)) {
         return false;
     }
 
@@ -1096,21 +1096,21 @@ bool relation_injective(struct relation* r, struct set* a, struct set* b) {
  * @return false - Relation is not surjective
  */
 bool relation_surjective(struct relation* r, struct set* a, struct set* b) {
-    if(!relation_valid_sets(r, a, b)){
+    if (!relation_valid_sets(r, a, b)) {
         return false;
     }
     // All elements from set b have to be in relation (second position)
     // There can be duplicates as well
     int unique_second_elements = 0;
-    for (int i = 0; i < r->size; i++){
+    for (int i = 0; i < r->size; i++) {
         bool duplicate = false;
-        for (int j = i - 1; j >= 0; j--){
-            if(r->nodes[i].b == r->nodes[j].b){
+        for (int j = i - 1; j >= 0; j--) {
+            if (r->nodes[i].b == r->nodes[j].b) {
                 duplicate = true;
                 break;
             }
         }
-        if (!duplicate){
+        if (!duplicate) {
             unique_second_elements++;
         }
     }
@@ -1682,9 +1682,10 @@ void* process_function_input(struct store* s,
             return f(retrieve_arg(s, c, 0, RELATION), s->universe);
         }
         case IN_RELATION_SET_SET: {
-            void* (*f)(struct relation*, struct set*, struct set*) = def.function;
-            return f(retrieve_arg(s, c, 0, RELATION), retrieve_arg(s, c, 1, SET),
-            retrieve_arg(s, c, 2, SET));
+            void* (*f)(struct relation*, struct set*, struct set*) =
+                def.function;
+            return f(retrieve_arg(s, c, 0, RELATION),
+                     retrieve_arg(s, c, 1, SET), retrieve_arg(s, c, 2, SET));
         }
         case IN_ANY: {
             void* (*f)(struct store_node*) = def.function;
@@ -1863,7 +1864,7 @@ bool parse_set(FILE* fp, struct set* s, struct universe* u) {
     s->size = 0;
     char buffer[STRING_BUFFER_SIZE] = {0};
     int index = 0;  // Index in buffer
-    int allocated = INITIAL_SET_ALLOC;
+    int a = INITIAL_SET_ALLOC;
 
     while (true) {
         int c = getc(fp);
@@ -1874,7 +1875,7 @@ bool parse_set(FILE* fp, struct set* s, struct universe* u) {
             buffer[index] = '\0';
             index = 0;
             // Realloc
-            if (!smart_realloc(s->nodes, s->size, &allocated, sizeof(int))) {
+            if (!smart_realloc((void**)&s->nodes, s->size, &a, sizeof(int))) {
                 return alloc_error();
             }
             // Find element in universe and set it
@@ -2229,8 +2230,7 @@ bool process_line(FILE* fp, char c, struct store* store) {
     // Ensure that universe will be first and present only once
     if ((next != ' ' && !empty) ||
         (store->size != 0 && store->universe == NULL) ||
-        (c == 'U' && store->size > 0) ||
-        (store->size == 0 && c != 'U')) {
+        (c == 'U' && store->size > 0) || (store->size == 0 && c != 'U')) {
         return false;
     }
 
@@ -2257,11 +2257,12 @@ bool process_line(FILE* fp, char c, struct store* store) {
  */
 bool process_file(FILE* fp, struct store* store) {
     int a = INITIAL_STORE_ALLOC;
+    const int node_size = sizeof(struct store_node);
 
     // Loop around all lines
-    for (int c = 0, i = 1; (c = getc(fp)) != EOF; i++) {
+    for (int c = 0, i = 2; (c = getc(fp)) != EOF; i++) {
         // Realloc store
-        if (!smart_realloc(store->nodes, i, &a, sizeof(struct store_node))) {
+        if (!smart_realloc((void**)&store->nodes, i, &a, node_size)) {
             return alloc_error();
         }
         // Parse one line
