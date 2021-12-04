@@ -13,7 +13,7 @@
 #include <limits.h>   // Number limits
 #include <stdbool.h>  // Bool type
 #include <stdio.h>    // IO functions
-#include <stdlib.h>   // EXIT macros
+#include <stdlib.h>   // EXIT macros, memory allocation
 #include <string.h>   // String manipulation functions
 #include <time.h>     // For seeding random generator
 #pragma endregion
@@ -64,7 +64,7 @@ struct set {
     int* nodes;  // Set nodes
 };
 
-// Struct to keep track of on node inside relation
+// Struct to keep track of one node inside relation
 struct relation_node {
     int a;  // First number
     int b;  // Second number
@@ -468,8 +468,9 @@ bool store_valid(struct store* store) {
             c_found = true;
         }
     }
-    // Ensure all types of nodes are present
-    return s_or_r_found && c_found;
+    // Ensure all types of nodes are present and the line limit
+    // wasn't exceeded
+    return s_or_r_found && c_found && (store->size <= 1000);
 }
 #pragma endregion
 #pragma region PRINT FUNCTIONS
@@ -1464,7 +1465,6 @@ void free_store(struct store* store) {
 }
 #pragma endregion
 #pragma region COMMAND_DEFS
-// TODO maybe move this into some function
 const struct command_def COMMAND_DEFS[] = {
     // Function name, function pointer, input, output
     {"empty", set_empty, IN_SET, OUT_BOOL},
@@ -1908,9 +1908,6 @@ bool parse_set(FILE* fp, struct set* s, struct universe* u) {
  * @retval false - Function failed
  * */
 bool parse_relation(FILE* fp, struct relation* r, struct universe* u) {
-    // TODO - not required?
-    // r->nodes = malloc(sizeof(struct relation_node));
-
     r->size = 0;
     char node[STRING_BUFFER_SIZE] = {0};
     int index = 0;
