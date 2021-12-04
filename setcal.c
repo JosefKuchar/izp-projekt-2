@@ -468,8 +468,9 @@ bool store_valid(struct store* store) {
             c_found = true;
         }
     }
-    // Ensure all types of nodes are present
-    return s_or_r_found && c_found;
+    // Ensure all types of nodes are present and the line limit
+    // wasn't exceeded
+    return s_or_r_found && c_found && (store->size <= 1000);
 }
 #pragma endregion
 #pragma region PRINT FUNCTIONS
