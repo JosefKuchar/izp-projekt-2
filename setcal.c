@@ -24,7 +24,7 @@
 #define STRING_BUFFER_SIZE MAX_STRING_LENGTH + 1  // +1 is for \0
 
 // Define maximum command arguments
-#define MAX_COMMAND_ARGUMENTS 3
+#define MAX_COMMAND_ARGUMENTS 4
 
 // Define initial allocation sizes
 #define INITIAL_STORE_ALLOC 10
